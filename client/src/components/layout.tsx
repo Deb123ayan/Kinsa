@@ -1,13 +1,15 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Ship, ShoppingCart, Globe, Phone, FileText, Menu, X, Anchor } from "lucide-react";
+import { Ship, ShoppingCart, Globe, Phone, FileText, Menu, X, Anchor, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/context/auth-context";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const { isLoggedIn, user, logout } = useAuth();
 
   // Mock cart count
   const cartCount = 2;
@@ -42,11 +44,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div className="bg-primary px-4 py-2 text-primary-foreground text-xs md:text-sm">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1"><Globe className="h-3 w-3" /> Global Export Services</span>
+            <span className="flex items-center gap-1"><Globe className="h-3 w-3" /> Global Exim Services</span>
             <span className="hidden md:flex items-center gap-1"><Anchor className="h-3 w-3" /> Incoterms: FOB, CIF, EXW</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="mailto:info@terratrade.com" className="hover:text-accent transition-colors">info@terratrade.com</a>
+            <a href="mailto:info@kinsa.com" className="hover:text-accent transition-colors">info@kinsa.com</a>
             <span className="hidden md:inline">|</span>
             <span className="hidden md:inline">+1 (555) 123-4567</span>
           </div>
@@ -58,39 +60,64 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto flex h-16 md:h-20 items-center justify-between px-4">
           
           {/* Logo */}
-          <Link href="/">
+          <Link href={isLoggedIn ? "/dashboard" : "/"}>
             <a className="flex items-center gap-2 group">
               <div className="bg-primary text-primary-foreground p-2 rounded-sm group-hover:bg-accent transition-colors">
                 <Ship className="h-6 w-6" />
               </div>
               <div className="flex flex-col">
-                <span className="font-serif text-xl font-bold leading-none tracking-tight text-primary">TerraTrade</span>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Global Commodities</span>
+                <span className="font-serif text-xl font-bold leading-none tracking-tight text-primary">KINSA</span>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Global Exim</span>
               </div>
             </a>
           </Link>
 
           {/* Desktop Nav */}
-          <NavContent className="hidden md:flex items-center gap-8" />
+          {isLoggedIn ? null : <NavContent className="hidden md:flex items-center gap-8" />}
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            <Link href="/cart">
-              <a className="relative p-2 hover:bg-accent/10 rounded-full transition-colors group">
-                <ShoppingCart className="h-5 w-5 text-foreground group-hover:text-accent transition-colors" />
-                {cartCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[10px]">
-                    {cartCount}
-                  </Badge>
-                )}
-              </a>
-            </Link>
-            
-            <Link href="/auth">
-               <Button variant="outline" className="hidden md:flex border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                 Partner Login
-               </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link href="/dashboard">
+                  <a className="p-2 hover:bg-accent/10 rounded-full transition-colors group text-foreground hover:text-accent">
+                    <LayoutDashboard className="h-5 w-5" />
+                  </a>
+                </Link>
+                <Link href="/cart">
+                  <a className="relative p-2 hover:bg-accent/10 rounded-full transition-colors group">
+                    <ShoppingCart className="h-5 w-5 text-foreground group-hover:text-accent transition-colors" />
+                    {cartCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[10px]">
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </a>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={logout} title="Logout" className="h-10 w-10">
+                  <LogOut className="h-5 w-5 text-foreground hover:text-destructive" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/cart">
+                  <a className="relative p-2 hover:bg-accent/10 rounded-full transition-colors group hidden md:block">
+                    <ShoppingCart className="h-5 w-5 text-foreground group-hover:text-accent transition-colors" />
+                    {cartCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[10px]">
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </a>
+                </Link>
+                
+                <Link href="/auth">
+                  <Button variant="outline" className="hidden md:flex border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                    Partner Login
+                  </Button>
+                </Link>
+              </>
+            )}
 
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -101,7 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </SheetTrigger>
               <SheetContent side="right">
                 <div className="flex flex-col gap-6 mt-6">
-                  <NavContent className="flex flex-col gap-4" />
+                  {!isLoggedIn && <NavContent className="flex flex-col gap-4" />}
                   <Link href="/auth">
                     <Button className="w-full">Partner Login</Button>
                   </Link>
@@ -125,7 +152,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Ship className="h-6 w-6 text-accent" />
-              <span className="font-serif text-xl font-bold">TerraTrade</span>
+              <span className="font-serif text-xl font-bold">KINSA</span>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
               Connecting global markets with premium quality grains, spices, and pulses. 
@@ -168,14 +195,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </li>
               <li className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                <span>inquiry@terratrade.com</span>
+                <span>inquiry@kinsa.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="container mx-auto px-4 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center text-xs text-primary-foreground/50">
-          <p>© 2024 TerraTrade Global. All rights reserved.</p>
+          <p>© 2024 KINSA Global. All rights reserved.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
             <Link href="/privacy"><a>Privacy Policy</a></Link>
             <Link href="/terms"><a>Terms of Service</a></Link>

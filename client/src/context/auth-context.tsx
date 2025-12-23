@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser({
       name: "John Doe",
       email,
-      company: "Global Traders Ltd.",
+      company: "KINSA Global Partners",
     });
     setIsLoggedIn(true);
   };

@@ -9,7 +9,7 @@ export default function About() {
         <div className="container mx-auto px-4">
           <h1 className="font-serif text-5xl font-bold mb-6">Our Legacy of Trust</h1>
           <p className="text-xl max-w-2xl mx-auto opacity-90">
-            For over two decades, TerraTrade has been the bridge between premium Indian agriculture and the world.
+            For over two decades, KINSA Global has been the bridge between premium Indian agriculture and the world.
           </p>
         </div>
       </div>
@@ -19,7 +19,7 @@ export default function About() {
           <div className="space-y-6">
             <h2 className="text-3xl font-serif font-bold text-primary">From Soil to Shelf</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Founded in 2000, TerraTrade began as a small family-owned spice trading house in Kerala. 
+              Founded in 2000, KINSA Global began as a small family-owned spice trading house in Kerala. 
               Today, we are a global conglomerate exporting over 50,000 metric tons of agro-commodities annually.
             </p>
             <p className="text-muted-foreground leading-relaxed">

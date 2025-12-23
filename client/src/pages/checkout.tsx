@@ -105,11 +105,11 @@ export default function Checkout() {
                     </div>
                     <div className="space-y-2">
                       <Label>Company Name</Label>
-                      <Input placeholder="Global Traders Ltd." required />
+                      <Input placeholder="Your Company Name" required />
                     </div>
                     <div className="space-y-2">
                       <Label>Business Email</Label>
-                      <Input type="email" placeholder="john@globaltraders.com" required />
+                      <Input type="email" placeholder="email@company.com" required />
                     </div>
                     <div className="space-y-2">
                        <Label>Phone Number (WhatsApp preferred)</Label>

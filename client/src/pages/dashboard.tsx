@@ -1,22 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Package, Truck, Clock, CheckCircle2, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Package, Truck, Clock, CheckCircle2, FileText, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
+import { ProductCard } from "@/components/product-card";
+import { PRODUCTS } from "@/data/mock-data";
 import { motion } from "framer-motion";
+import { formatPrice } from "@/lib/currency";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { cart, addToCart, removeFromCart, cartTotal } = useCart();
 
   // Mock Orders
   const orders = [
-    { id: "ORD-2024-001", date: "2024-12-01", items: "Sharbati Wheat (50 MT)", total: "$22,500", status: "Delivered", statusColor: "default" },
-    { id: "ORD-2024-005", date: "2024-12-15", items: "Teja Red Chili (10 MT)", total: "$32,000", status: "In Transit", statusColor: "secondary" },
-    { id: "ORD-2024-008", date: "2024-12-20", items: "Basmati Rice (100 MT)", total: "$120,000", status: "Processing", statusColor: "outline" },
+    { id: "ORD-2024-001", date: "2024-12-01", items: "Sharbati Wheat (50 MT)", total: formatPrice(1750000), status: "Delivered", statusColor: "default" },
+    { id: "ORD-2024-005", date: "2024-12-15", items: "Teja Red Chili (10 MT)", total: formatPrice(2500000), status: "In Transit", statusColor: "secondary" },
+    { id: "ORD-2024-008", date: "2024-12-20", items: "Basmati Rice (100 MT)", total: formatPrice(9500000), status: "Processing", statusColor: "outline" },
   ];
 
   const statCards = [
@@ -40,7 +46,7 @@ export default function Dashboard() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <h1 className="font-serif text-3xl font-bold text-primary">Welcome, {user?.name}!</h1>
-            <p className="text-muted-foreground">{user?.company}</p>
+            <p className="text-muted-foreground">KINSA Global - Your Partner Portal</p>
           </motion.div>
           <motion.div
             initial={{ x: 20 }}
@@ -48,13 +54,14 @@ export default function Dashboard() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Link href="/catalog">
-              <Button>New Order</Button>
+              <Button>Browse More Products</Button>
             </Link>
           </motion.div>
         </div>
       </motion.div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -77,7 +84,7 @@ export default function Dashboard() {
                     <Icon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-2xl font-bold text-primary">{stat.value}</div>
                     <p className="text-xs text-muted-foreground">{stat.sub}</p>
                   </CardContent>
                 </Card>
@@ -86,6 +93,7 @@ export default function Dashboard() {
           })}
         </motion.div>
 
+        {/* Tabs Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,46 +101,114 @@ export default function Dashboard() {
         >
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="font-serif text-xl">Recent Order History</CardTitle>
+              <CardTitle className="font-serif text-2xl text-primary">Order Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Total Value</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order, idx) => (
-                    <motion.tr
-                      key={order.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.1 }}
-                    >
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell>{order.items}</TableCell>
-                      <TableCell>{order.total}</TableCell>
-                      <TableCell>
-                        <Badge variant={order.statusColor as "default" | "secondary" | "outline" | "destructive"}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          <FileText className="h-4 w-4 mr-1" /> Invoice
+              <Tabs defaultValue="products" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="products">
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Browse Products ({cart.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="orders">Order History</TabsTrigger>
+                </TabsList>
+
+                {/* Products Tab */}
+                <TabsContent value="products" className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-primary mb-4">Featured Products</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                      {PRODUCTS.map((product, idx) => (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: idx * 0.05 }}
+                        >
+                          <ProductCard product={product} />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Current Cart */}
+                  {cart.length > 0 && (
+                    <div className="bg-accent/10 border border-accent/20 rounded-lg p-6 space-y-4">
+                      <h4 className="font-bold text-primary text-lg">Current Inquiry Cart</h4>
+                      <div className="space-y-3">
+                        {cart.map((item) => (
+                          <div key={item.product.id} className="flex justify-between items-center p-3 bg-white rounded-md border border-border">
+                            <div>
+                              <p className="font-medium text-primary">{item.product.name}</p>
+                              <p className="text-sm text-muted-foreground">Quantity: {item.quantity} {item.product.unit}</p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => removeFromCart(item.product.id)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="border-t pt-4 flex justify-between items-center">
+                        <span className="font-bold text-primary">Total:</span>
+                        <span className="text-2xl font-bold text-primary">{formatPrice(cartTotal)}</span>
+                      </div>
+                      <Link href="/checkout">
+                        <Button className="w-full bg-accent hover:bg-accent/90 text-white">
+                          Proceed to Checkout
                         </Button>
-                      </TableCell>
-                    </motion.tr>
-                  ))}
-                </TableBody>
-              </Table>
+                      </Link>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Order History Tab */}
+                <TabsContent value="orders">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead>Total Value</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order, idx) => (
+                        <motion.tr
+                          key={order.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: idx * 0.1 }}
+                        >
+                          <TableCell className="font-medium">{order.id}</TableCell>
+                          <TableCell>{order.date}</TableCell>
+                          <TableCell>{order.items}</TableCell>
+                          <TableCell className="font-medium text-primary">{order.total}</TableCell>
+                          <TableCell>
+                            <Badge variant={order.statusColor as "default" | "secondary" | "outline" | "destructive"}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm">
+                              <FileText className="h-4 w-4 mr-1" /> Invoice
+                            </Button>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </motion.div>

@@ -10,12 +10,14 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Truck, CreditCard, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/currency";
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const { toast } = useToast();
   const { isLoggedIn } = useAuth();
+  const { cart, clearCart, cartTotal } = useCart();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -37,7 +39,12 @@ export default function Checkout() {
       title: "Inquiry Sent Successfully!",
       description: "Our sales team will contact you within 24 hours with a formal invoice.",
     });
+    clearCart();
+    setTimeout(() => setLocation("/dashboard"), 2000);
   };
+
+  const estimatedShipping = 120000;
+  const total = cartTotal + estimatedShipping;
 
   return (
     <Layout>
@@ -89,24 +96,24 @@ export default function Checkout() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>First Name</Label>
-                        <Input placeholder="John" />
+                        <Input placeholder="John" required />
                       </div>
                       <div className="space-y-2">
                         <Label>Last Name</Label>
-                        <Input placeholder="Doe" />
+                        <Input placeholder="Doe" required />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Company Name</Label>
-                      <Input placeholder="Global Traders Ltd." />
+                      <Input placeholder="Global Traders Ltd." required />
                     </div>
                     <div className="space-y-2">
                       <Label>Business Email</Label>
-                      <Input type="email" placeholder="john@globaltraders.com" />
+                      <Input type="email" placeholder="john@globaltraders.com" required />
                     </div>
                     <div className="space-y-2">
                        <Label>Phone Number (WhatsApp preferred)</Label>
-                       <Input placeholder="+91 ..." />
+                       <Input placeholder="+91 ..." required />
                     </div>
                     <div className="space-y-2">
                       <Label>Import Export Code (IEC) / Tax ID</Label>
@@ -120,12 +127,12 @@ export default function Checkout() {
                   <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-2">
                       <Label>Shipping Address</Label>
-                      <Input placeholder="Street address, Port, etc." />
+                      <Input placeholder="Street address, Port, etc." required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>City / Port</Label>
-                        <Input placeholder="Dubai" />
+                        <Input placeholder="Dubai" required />
                       </div>
                       <div className="space-y-2">
                         <Label>Country</Label>
@@ -165,14 +172,29 @@ export default function Checkout() {
                 {/* Step 3: Review */}
                 {step === 3 && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="bg-secondary/30 p-4 rounded-lg space-y-3">
+                    <div className="bg-secondary/30 p-4 rounded-lg space-y-4">
                       <h4 className="font-bold text-primary">Order Summary</h4>
-                      <div className="flex justify-between text-sm">
-                        <span>2 items (25 MT Total)</span>
-                        <span className="font-medium text-primary">{formatPrice(1750000)}</span>
+                      {cart.map((item) => (
+                        <div key={item.product.id} className="flex justify-between text-sm">
+                          <span>{item.product.name} ({item.quantity} {item.product.unit})</span>
+                          <span className="font-medium text-primary">{formatPrice(item.product.price * item.quantity)}</span>
+                        </div>
+                      ))}
+                      <Separator className="bg-border/50" />
+                      <div className="flex justify-between text-sm font-medium">
+                        <span>Subtotal</span>
+                        <span className="text-primary">{formatPrice(cartTotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-medium">
+                        <span>Est. Shipping</span>
+                        <span className="text-primary">{formatPrice(estimatedShipping)}</span>
                       </div>
                       <Separator className="bg-border/50" />
-                      <p className="text-xs text-muted-foreground">
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total</span>
+                        <span className="text-primary">{formatPrice(total)}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-4">
                         By submitting this inquiry, you are requesting a formal proforma invoice. 
                         No payment is taken at this stage. Our team will verify availability and shipping costs.
                       </p>
@@ -182,7 +204,7 @@ export default function Checkout() {
                       <div className="flex items-start space-x-2">
                         <input type="checkbox" id="terms" className="mt-1" required />
                         <label htmlFor="terms" className="text-sm text-muted-foreground">
-                          I agree to the <span className="text-accent underline">Terms & Conditions</span> and understand this is a wholesale trade inquiry.
+                          I agree to the <Link href="/terms"><a className="text-accent underline">Terms & Conditions</a></Link> and understand this is a wholesale trade inquiry.
                         </label>
                       </div>
                     </div>

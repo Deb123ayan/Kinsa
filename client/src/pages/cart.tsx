@@ -2,16 +2,17 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { PRODUCTS } from "@/data/mock-data";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/currency";
 
 export default function Cart() {
   const { isLoggedIn } = useAuth();
+  const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -25,18 +26,19 @@ export default function Cart() {
       setLocation("/auth");
       return;
     }
+    if (cart.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Please add items to your cart before checking out.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLocation("/checkout");
   };
 
-  // Mock Cart Items
-  const cartItems = [
-    { product: PRODUCTS[0], quantity: 20 },
-    { product: PRODUCTS[2], quantity: 5 },
-  ];
-
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   const estimatedShipping = 120000;
-  const total = subtotal + estimatedShipping;
+  const total = cartTotal + estimatedShipping;
 
   return (
     <Layout>
@@ -46,55 +48,59 @@ export default function Cart() {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Cart Items List */}
           <div className="flex-1 space-y-6">
-            <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
-              <div className="p-4 bg-secondary/30 border-b border-border font-medium text-sm grid grid-cols-12 gap-4">
-                <div className="col-span-6">Product</div>
-                <div className="col-span-2 text-center">Price</div>
-                <div className="col-span-2 text-center">Quantity (MT)</div>
-                <div className="col-span-2 text-right">Total</div>
-              </div>
-              
-              <div className="divide-y divide-border">
-                {cartItems.map((item) => (
-                  <div key={item.product.id} className="p-4 grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-6 flex gap-4">
-                      <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
-                        <img src={item.product.image} alt="" className="h-full w-full object-cover" />
+            {cart.length > 0 ? (
+              <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+                <div className="p-4 bg-secondary/30 border-b border-border font-medium text-sm grid grid-cols-12 gap-4">
+                  <div className="col-span-6">Product</div>
+                  <div className="col-span-2 text-center">Price</div>
+                  <div className="col-span-2 text-center">Quantity (MT)</div>
+                  <div className="col-span-2 text-right">Total</div>
+                </div>
+                
+                <div className="divide-y divide-border">
+                  {cart.map((item) => (
+                    <div key={item.product.id} className="p-4 grid grid-cols-12 gap-4 items-center">
+                      <div className="col-span-6 flex gap-4">
+                        <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
+                          <img src={item.product.image} alt="" className="h-full w-full object-cover" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-primary">{item.product.name}</h4>
+                          <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-primary">{item.product.name}</h4>
-                        <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
+                      <div className="col-span-2 text-center text-sm">
+                        {formatPrice(item.product.price)}
+                      </div>
+                      <div className="col-span-2 flex justify-center">
+                         <Input 
+                          type="number" 
+                          value={item.quantity} 
+                          onChange={(e) => updateQuantity(item.product.id, Number(e.target.value))}
+                          className="w-16 text-center h-8"
+                         />
+                      </div>
+                      <div className="col-span-2 flex items-center justify-end gap-4">
+                        <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeFromCart(item.product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="col-span-2 text-center text-sm">
-                      {formatPrice(item.product.price)}
-                    </div>
-                    <div className="col-span-2 flex justify-center">
-                       <Input 
-                        type="number" 
-                        defaultValue={item.quantity} 
-                        className="w-16 text-center h-8"
-                       />
-                    </div>
-                    <div className="col-span-2 flex items-center justify-end gap-4">
-                      <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => {
-                        if (!isLoggedIn) {
-                          toast({
-                            title: "Please Login",
-                            description: "You need to login to manage your cart.",
-                            variant: "destructive",
-                          });
-                          setLocation("/auth");
-                        }
-                      }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-20 bg-secondary/20 rounded-lg">
+                <h3 className="text-xl font-medium text-muted-foreground">Your cart is empty</h3>
+                <p className="text-sm text-muted-foreground mt-2">Browse our products and add items to get started.</p>
+              </div>
+            )}
             
             <Link href="/catalog">
               <Button variant="link" className="px-0 text-accent">
@@ -111,7 +117,7 @@ export default function Cart() {
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal (Goods)</span>
-                  <span className="font-medium text-primary">{formatPrice(subtotal)}</span>
+                  <span className="font-medium text-primary">{formatPrice(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Est. Shipping (FOB)</span>
@@ -137,6 +143,7 @@ export default function Cart() {
                   size="lg" 
                   className="w-full bg-accent hover:bg-accent/90 text-white mt-6"
                   onClick={handleCheckout}
+                  disabled={cart.length === 0}
                 >
                   {isLoggedIn ? "Proceed to Inquiry" : "Login to Checkout"}
                 </Button>

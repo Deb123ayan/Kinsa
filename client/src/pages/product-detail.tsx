@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
 import { ArrowLeft, Minus, Plus, ShoppingCart, Truck, ShieldCheck, FileCheck } from "lucide-react";
 import { formatPriceWithUnit, formatPrice } from "@/lib/currency";
 
@@ -16,6 +17,7 @@ export default function ProductDetail() {
   const [match, params] = useRoute("/product/:id");
   const { toast } = useToast();
   const { isLoggedIn } = useAuth();
+  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(10);
 
   if (!match || !params) return <div>Product not found</div>;
@@ -42,6 +44,7 @@ export default function ProductDetail() {
       });
       return;
     }
+    addToCart(product, quantity);
     toast({
       title: "Added to Cart",
       description: `${quantity} ${product.unit} of ${product.name} added to your inquiry list.`,

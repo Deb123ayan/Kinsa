@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/auth-context";
+import { CartProvider } from "@/context/cart-context";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Catalog from "@/pages/catalog";
@@ -32,10 +33,10 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/dashboard" component={ProtectedDashboard} />
       {/* Legal routes */}
-      <Route path="/privacy" component={() => <Legal />} />
-      <Route path="/terms" component={() => <Legal />} />
-      <Route path="/shipping" component={() => <Legal />} />
-      <Route path="/track" component={() => <Legal />} />
+      <Route path="/privacy" component={() => <Legal slug="privacy" />} />
+      <Route path="/terms" component={() => <Legal slug="terms" />} />
+      <Route path="/shipping" component={() => <Legal slug="shipping" />} />
+      <Route path="/track" component={() => <Legal slug="track" />} />
       
       <Route component={NotFound} />
     </Switch>
@@ -46,10 +47,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

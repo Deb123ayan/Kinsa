@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const { isLoggedIn, user, logout } = useAuth();
-
-  // Mock cart count
-  const cartCount = 2;
+  const { cartCount } = useCart();
 
   const navLinks = [
     { href: "/", label: "Home" },

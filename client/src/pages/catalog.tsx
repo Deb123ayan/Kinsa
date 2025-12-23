@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useSearch } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { ProductCard } from "@/components/product-card";
 import { PRODUCTS, CATEGORIES } from "@/data/mock-data";
@@ -8,18 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
 import { Search, Filter, X } from "lucide-react";
 
 export default function Catalog() {
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
   const initialCategory = searchParams.get("category");
+  const { isLoggedIn } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCategory ? [initialCategory] : []
   );
-  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [priceRange, setPriceRange] = useState([0, 3500000]);
 
   // Filter Logic
   const filteredProducts = PRODUCTS.filter((product) => {
@@ -46,6 +51,17 @@ export default function Catalog() {
     );
   };
 
+  const handleProductClick = () => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Please Login",
+        description: "You need to login to view product details.",
+        variant: "destructive",
+      });
+      setLocation("/auth");
+    }
+  };
+
   const SidebarFilters = () => (
     <div className="space-y-8">
       <div>
@@ -70,18 +86,18 @@ export default function Catalog() {
       </div>
 
       <div>
-        <h3 className="font-serif font-bold text-primary mb-4">Price Range (USD/MT)</h3>
+        <h3 className="font-serif font-bold text-primary mb-4">Price Range (₹)</h3>
         <Slider 
-          defaultValue={[0, 5000]} 
-          max={50000} 
-          step={100} 
+          defaultValue={[0, 3500000]} 
+          max={3500000} 
+          step={100000} 
           value={priceRange}
           onValueChange={setPriceRange}
           className="mb-4"
         />
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>${priceRange[0]}</span>
-          <span>${priceRange[1]}+</span>
+          <span>₹{priceRange[0].toLocaleString('en-IN')}</span>
+          <span>₹{priceRange[1].toLocaleString('en-IN')}</span>
         </div>
       </div>
 
@@ -98,7 +114,7 @@ export default function Catalog() {
         className="w-full"
         onClick={() => {
           setSelectedCategories([]);
-          setPriceRange([0, 5000]);
+          setPriceRange([0, 3500000]);
           setSearchQuery("");
         }}
       >
@@ -157,7 +173,9 @@ export default function Catalog() {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <div key={product.id} onClick={handleProductClick}>
+                    <ProductCard product={product} />
+                  </div>
                 ))}
               </div>
             ) : (
@@ -168,7 +186,7 @@ export default function Catalog() {
                   className="mt-2 text-accent"
                   onClick={() => {
                     setSelectedCategories([]);
-                    setPriceRange([0, 5000]);
+                    setPriceRange([0, 3500000]);
                     setSearchQuery("");
                   }}
                 >

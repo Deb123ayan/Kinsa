@@ -8,12 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
 import { ArrowLeft, Minus, Plus, ShoppingCart, Truck, ShieldCheck, FileCheck } from "lucide-react";
+import { formatPriceWithUnit, formatPrice } from "@/lib/currency";
 
 export default function ProductDetail() {
   const [match, params] = useRoute("/product/:id");
   const { toast } = useToast();
-  const [quantity, setQuantity] = useState(10); // Minimum Order Quantity simulation
+  const { isLoggedIn } = useAuth();
+  const [quantity, setQuantity] = useState(10);
 
   if (!match || !params) return <div>Product not found</div>;
 
@@ -31,6 +34,14 @@ export default function ProductDetail() {
   }
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Please Login",
+        description: "You need to login to add items to your inquiry list.",
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Added to Cart",
       description: `${quantity} ${product.unit} of ${product.name} added to your inquiry list.`,
@@ -62,7 +73,6 @@ export default function ProductDetail() {
                />
              </div>
              <div className="grid grid-cols-4 gap-4">
-               {/* Mock thumbnails */}
                {[1, 2, 3, 4].map((i) => (
                  <div key={i} className="aspect-square rounded-md overflow-hidden bg-secondary border border-border cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all">
                    <img src={product.image} alt="" className="w-full h-full object-cover opacity-80 hover:opacity-100" />
@@ -92,7 +102,7 @@ export default function ProductDetail() {
 
             <div className="p-6 bg-secondary/20 rounded-lg border border-border">
               <div className="flex items-end gap-2 mb-6">
-                <span className="text-3xl font-bold text-primary">${product.price}</span>
+                <span className="text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
                 <span className="text-sm text-muted-foreground mb-1">/ Metric Ton (FOB)</span>
               </div>
               
@@ -123,7 +133,7 @@ export default function ProductDetail() {
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button size="lg" className="flex-1 bg-accent hover:bg-accent/90 text-white" onClick={handleAddToCart}>
-                    <ShoppingCart className="mr-2 h-5 w-5" /> Add to Inquiry List
+                    <ShoppingCart className="mr-2 h-5 w-5" /> {isLoggedIn ? "Add to Inquiry" : "Login to Inquire"}
                   </Button>
                   <Button size="lg" variant="outline" className="flex-1 border-primary text-primary hover:bg-primary hover:text-white">
                     Request Sample

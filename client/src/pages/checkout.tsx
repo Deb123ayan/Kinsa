@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "wouter";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Truck, CreditCard, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
+import { formatPrice } from "@/lib/currency";
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const { toast } = useToast();
+  const { isLoggedIn } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setLocation("/auth");
+    }
+  }, [isLoggedIn, setLocation]);
+
+  if (!isLoggedIn) {
+    return null;
+  }
 
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
@@ -92,7 +106,7 @@ export default function Checkout() {
                     </div>
                     <div className="space-y-2">
                        <Label>Phone Number (WhatsApp preferred)</Label>
-                       <Input placeholder="+1 ..." />
+                       <Input placeholder="+91 ..." />
                     </div>
                     <div className="space-y-2">
                       <Label>Import Export Code (IEC) / Tax ID</Label>
@@ -155,7 +169,7 @@ export default function Checkout() {
                       <h4 className="font-bold text-primary">Order Summary</h4>
                       <div className="flex justify-between text-sm">
                         <span>2 items (25 MT Total)</span>
-                        <span className="font-medium">Approx. $10,500</span>
+                        <span className="font-medium text-primary">{formatPrice(1750000)}</span>
                       </div>
                       <Separator className="bg-border/50" />
                       <p className="text-xs text-muted-foreground">

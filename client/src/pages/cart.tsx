@@ -1,21 +1,41 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS } from "@/data/mock-data";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import { formatPrice } from "@/lib/currency";
 
 export default function Cart() {
-  // Mock Cart Items (Product + Quantity)
+  const { isLoggedIn } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const handleCheckout = () => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Please Login",
+        description: "You need to login to proceed to checkout.",
+        variant: "destructive",
+      });
+      setLocation("/auth");
+      return;
+    }
+    setLocation("/checkout");
+  };
+
+  // Mock Cart Items
   const cartItems = [
     { product: PRODUCTS[0], quantity: 20 },
     { product: PRODUCTS[2], quantity: 5 },
   ];
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
-  const estimatedShipping = 1500; // Mock
+  const estimatedShipping = 120000;
   const total = subtotal + estimatedShipping;
 
   return (
@@ -47,7 +67,7 @@ export default function Cart() {
                       </div>
                     </div>
                     <div className="col-span-2 text-center text-sm">
-                      ${item.product.price}
+                      {formatPrice(item.product.price)}
                     </div>
                     <div className="col-span-2 flex justify-center">
                        <Input 
@@ -57,8 +77,17 @@ export default function Cart() {
                        />
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-4">
-                      <span className="font-bold text-primary">${item.product.price * item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                      <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => {
+                        if (!isLoggedIn) {
+                          toast({
+                            title: "Please Login",
+                            description: "You need to login to manage your cart.",
+                            variant: "destructive",
+                          });
+                          setLocation("/auth");
+                        }
+                      }}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -82,11 +111,11 @@ export default function Cart() {
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal (Goods)</span>
-                  <span className="font-medium">${subtotal.toLocaleString()}</span>
+                  <span className="font-medium text-primary">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Est. Shipping (FOB)</span>
-                  <span className="font-medium">${estimatedShipping.toLocaleString()}</span>
+                  <span className="font-medium text-primary">{formatPrice(estimatedShipping)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax / Duty</span>
@@ -97,18 +126,20 @@ export default function Cart() {
                 
                 <div className="flex justify-between items-end">
                   <span className="font-bold text-primary text-lg">Est. Total</span>
-                  <span className="font-bold text-primary text-2xl">${total.toLocaleString()}</span>
+                  <span className="font-bold text-primary text-2xl">{formatPrice(total)}</span>
                 </div>
                 
                 <p className="text-xs text-muted-foreground mt-4">
                   *Final pricing including freight (CIF) will be confirmed by our sales team within 24 hours of inquiry submission.
                 </p>
                 
-                <Link href="/checkout">
-                  <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-white mt-6">
-                    Proceed to Inquiry
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="w-full bg-accent hover:bg-accent/90 text-white mt-6"
+                  onClick={handleCheckout}
+                >
+                  {isLoggedIn ? "Proceed to Inquiry" : "Login to Checkout"}
+                </Button>
               </div>
             </div>
           </div>

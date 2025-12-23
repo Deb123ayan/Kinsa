@@ -6,7 +6,7 @@ export interface Product {
   id: string;
   name: string;
   category: "Grains" | "Spices" | "Pulses";
-  price: number; // Price per metric ton or kg (mock)
+  price: number; // Price in INR per metric ton
   unit: string;
   image: string;
   description: string;
@@ -45,9 +45,9 @@ export const PRODUCTS: Product[] = [
     id: "wheat-sharbati",
     name: "Sharbati Wheat Premium",
     category: "Grains",
-    price: 450,
+    price: 35000,
     unit: "MT",
-    image: grainsImg, // Reusing texture for now
+    image: grainsImg,
     description: "Known as the 'Golden Grain', Sharbati wheat is sweet, nutty, and produces the softest rotis. Premium export quality.",
     specs: {
       moisture: "10-11%",
@@ -61,7 +61,7 @@ export const PRODUCTS: Product[] = [
     id: "rice-basmati",
     name: "Royal Basmati Rice 1121",
     category: "Grains",
-    price: 1200,
+    price: 95000,
     unit: "MT",
     image: grainsImg,
     description: "Extra long grain Basmati rice with an exquisite aroma. Aged for 12 months for perfect fluffiness.",
@@ -77,7 +77,7 @@ export const PRODUCTS: Product[] = [
     id: "turmeric-powder",
     name: "Salem Turmeric Powder",
     category: "Spices",
-    price: 2500,
+    price: 200000,
     unit: "MT",
     image: spicesImg,
     description: "High curcumin content turmeric powder with a vibrant golden yellow color. Lab tested for purity.",
@@ -93,7 +93,7 @@ export const PRODUCTS: Product[] = [
     id: "cardamom-green",
     name: "Green Cardamom 8mm",
     category: "Spices",
-    price: 45000,
+    price: 3500000,
     unit: "MT",
     image: spicesImg,
     description: "Hand-picked jumbo green cardamom pods. Intense fragrance and bold flavor.",
@@ -109,7 +109,7 @@ export const PRODUCTS: Product[] = [
     id: "chili-teja",
     name: "Teja Red Chili Whole",
     category: "Spices",
-    price: 3200,
+    price: 250000,
     unit: "MT",
     image: spicesImg,
     description: "One of the hottest chili varieties available. Deep red color and high pungency.",
@@ -125,7 +125,7 @@ export const PRODUCTS: Product[] = [
     id: "lentils-red",
     name: "Red Split Lentils (Masoor Dal)",
     category: "Pulses",
-    price: 850,
+    price: 65000,
     unit: "MT",
     image: pulsesImg,
     description: "Quick-cooking red lentils, polished and sortex cleaned. High protein content.",
@@ -141,7 +141,7 @@ export const PRODUCTS: Product[] = [
     id: "chickpeas-kabuli",
     name: "Kabuli Chickpeas 12mm",
     category: "Pulses",
-    price: 1100,
+    price: 85000,
     unit: "MT",
     image: pulsesImg,
     description: "Large size creamy white chickpeas. Perfect for hummus and canning.",

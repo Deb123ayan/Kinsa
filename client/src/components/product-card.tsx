@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Product } from "@/data/mock-data";
+import { formatPriceWithUnit } from "@/lib/currency";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -54,7 +55,7 @@ export function ProductCard({ product }: { product: Product }) {
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground">Price Estimate</span>
               <span className="font-bold text-primary text-lg">
-                ${product.price} <span className="text-xs font-normal text-muted-foreground">/ {product.unit}</span>
+                {formatPriceWithUnit(product.price, product.unit)}
               </span>
             </div>
             <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors border-primary/20">

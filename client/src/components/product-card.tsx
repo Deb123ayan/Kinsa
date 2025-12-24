@@ -9,7 +9,7 @@ import { formatPriceWithUnit } from "@/lib/currency";
 export function ProductCard({ product }: { product: Product }) {
   return (
     <Link href={`/product/${product.id}`}>
-      <a className="group block h-full">
+      <div className="group block h-full cursor-pointer">
         <Card className="h-full overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
           <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
             <img 
@@ -58,12 +58,12 @@ export function ProductCard({ product }: { product: Product }) {
                 {formatPriceWithUnit(product.price, product.unit)}
               </span>
             </div>
-            <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors border-primary/20">
+            <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors border-primary/20 shrink-0">
               Details <ArrowRight className="ml-2 h-3 w-3" />
             </Button>
           </CardFooter>
         </Card>
-      </a>
+      </div>
     </Link>
   );
 }

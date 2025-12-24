@@ -114,7 +114,7 @@ export default function Home() {
                 viewport={{ once: true }}
               >
                 <Link href={`/catalog?category=${cat.id}`}>
-                  <a className="group block relative overflow-hidden rounded-lg aspect-[4/5] shadow-lg">
+                  <div className="group block relative overflow-hidden rounded-lg aspect-[4/5] shadow-lg cursor-pointer">
                     <div className="absolute inset-0">
                       <img 
                         src={cat.image} 
@@ -123,16 +123,11 @@ export default function Home() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity group-hover:opacity-90" />
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-2 transition-transform duration-300 group-hover:translate-y-0">
-                      <h3 className="text-2xl font-serif font-bold mb-2">{cat.name}</h3>
-                      <p className="text-white/80 text-sm mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                        {cat.description}
-                      </p>
-                      <span className="inline-flex items-center text-accent text-sm font-medium">
-                        View Products <ArrowRight className="ml-2 h-4 w-4" />
-                      </span>
+                    <div className="absolute inset-0 flex flex-col justify-end p-6">
+                      <h3 className="text-2xl font-serif font-bold text-white mb-2 group-hover:text-accent transition-colors">{cat.name}</h3>
+                      <p className="text-white/70 group-hover:text-white transition-colors text-sm">{cat.description}</p>
                     </div>
-                  </a>
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -140,133 +135,120 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-20 bg-secondary/30 border-y border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-12 items-center">
-            <motion.div 
-              className="flex-1 space-y-8"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary">
-                Reliable Partners in <br />Global Trade
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                With over 20 years of experience in agricultural exports, we understand the nuances of international logistics and quality control.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
-                <motion.div 
-                  className="flex gap-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-primary mb-1">Quality Certified</h4>
-                    <p className="text-sm text-muted-foreground">ISO 22000 & APEDA certified processes.</p>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  className="flex gap-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Globe2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-primary mb-1">Global Logistics</h4>
-                    <p className="text-sm text-muted-foreground">Seamless shipping to 50+ countries.</p>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  className="flex gap-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Leaf className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-primary mb-1">Direct Sourcing</h4>
-                    <p className="text-sm text-muted-foreground">Farm-to-port traceability guaranteed.</p>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  className="flex gap-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-primary mb-1">Buyer Protection</h4>
-                    <p className="text-sm text-muted-foreground">Transparent pricing and secure contracts.</p>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="flex-1 relative"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <div className="relative z-10 grid grid-cols-2 gap-4">
-                 <div className="space-y-4 translate-y-8">
-                    <img src={CATEGORIES[0].image} alt="" className="rounded-lg shadow-xl" />
-                    <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-xl">
-                      <h3 className="font-serif text-3xl font-bold text-accent mb-2">50k+</h3>
-                      <p className="text-sm">Metric Tons Exported Annually</p>
-                    </div>
-                 </div>
-                 <div className="space-y-4">
-                    <div className="bg-white p-6 rounded-lg shadow-xl border border-border">
-                      <h3 className="font-serif text-3xl font-bold text-primary mb-2">24/7</h3>
-                      <p className="text-sm text-muted-foreground">Logistics Support & Tracking</p>
-                    </div>
-                    <img src={CATEGORIES[1].image} alt="" className="rounded-lg shadow-xl" />
-                 </div>
-              </div>
-              {/* Decor */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-accent/5 rounded-full blur-3xl -z-0" />
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* Featured Products */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <span className="text-accent text-sm font-bold uppercase tracking-widest">In Demand</span>
-              <h2 className="text-3xl font-serif font-bold text-primary mt-2">Featured Products</h2>
-            </div>
-            <Link href="/catalog">
-              <Button variant="outline">View All Products</Button>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div 
+            className="text-center mb-16 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl font-serif font-bold text-primary mb-4">Featured Products</h2>
+            <p className="text-muted-foreground">Browse our bestselling commodities with guaranteed quality and competitive pricing.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {featuredProducts.map((product, idx) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                transition={{ duration: 0.6, delay: idx * 0.05 }}
                 viewport={{ once: true }}
               >
                 <ProductCard product={product} />
               </motion.div>
             ))}
           </div>
+
+          <div className="text-center">
+            <Link href="/catalog">
+              <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                View Full Catalog <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="text-center mb-16 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl font-serif font-bold text-primary mb-4">Why Choose KINSA Global</h2>
+            <p className="text-muted-foreground">We deliver excellence through quality, transparency, and trusted partnerships.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: ShieldCheck,
+                title: "Certified Quality",
+                desc: "ISO 22000 certified, lab-tested every batch with complete traceability"
+              },
+              {
+                icon: Globe2,
+                title: "Global Logistics",
+                desc: "Flexible Incoterms (FOB, CIF, EXW) with professional freight partners"
+              },
+              {
+                icon: Leaf,
+                title: "Farm Fresh",
+                desc: "Direct sourcing from 500+ certified farmers across India"
+              }
+            ].map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  viewport={{ once: true }}
+                  className="p-8 border border-border rounded-lg hover:shadow-lg transition-shadow"
+                >
+                  <Icon className="h-12 w-12 text-accent mb-4" />
+                  <h3 className="text-xl font-bold text-primary mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.desc}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-primary text-primary-foreground text-center">
+        <motion.div 
+          className="container mx-auto px-4 max-w-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="font-serif text-4xl font-bold mb-4">Ready to Source Premium Commodities?</h2>
+          <p className="text-lg opacity-90 mb-8">Join hundreds of wholesale buyers who trust KINSA Global for consistent quality and competitive pricing.</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/auth">
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                Create Partner Account
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10">
+                Contact Sales
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
       </section>
     </Layout>
   );

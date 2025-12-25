@@ -24,6 +24,16 @@ export default function Home() {
     return null;
   }
 
+  const floatingVariants = {
+    animate: {
+      y: [0, -20, 0],
+      transition: {
+        duration: 6,
+        repeat: Infinity,
+      },
+    },
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -36,6 +46,13 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/50 to-transparent" />
         </div>
+
+        {/* Animated background elements */}
+        <motion.div
+          className="absolute top-20 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
         
         <div className="container relative mx-auto h-full flex flex-col justify-center px-4">
           <motion.div 
@@ -112,6 +129,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
                 viewport={{ once: true }}
+                whileHover={{ y: -10, transition: { duration: 0.3 } }}
               >
                 <Link href={`/catalog?category=${cat.id}`}>
                   <div className="group block relative overflow-hidden rounded-lg aspect-[4/5] shadow-lg cursor-pointer">
@@ -123,10 +141,15 @@ export default function Home() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity group-hover:opacity-90" />
                     </div>
-                    <div className="absolute inset-0 flex flex-col justify-end p-6">
+                    <motion.div 
+                      className="absolute inset-0 flex flex-col justify-end p-6"
+                      initial={{ y: 20, opacity: 0 }}
+                      whileInView={{ y: 0, opacity: 1 }}
+                      viewport={{ once: true }}
+                    >
                       <h3 className="text-2xl font-serif font-bold text-white mb-2 group-hover:text-accent transition-colors">{cat.name}</h3>
                       <p className="text-white/70 group-hover:text-white transition-colors text-sm">{cat.description}</p>
-                    </div>
+                    </motion.div>
                   </div>
                 </Link>
               </motion.div>
@@ -157,6 +180,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: idx * 0.05 }}
                 viewport={{ once: true }}
+                whileHover={{ y: -8 }}
               >
                 <ProductCard product={product} />
               </motion.div>
@@ -173,8 +197,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-20 bg-background">
+      {/* Why Choose Us - 3D Cards */}
+      <section className="py-20 bg-background perspective">
         <div className="container mx-auto px-4">
           <motion.div 
             className="text-center mb-16 max-w-2xl mx-auto"
@@ -213,14 +237,50 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: idx * 0.1 }}
                   viewport={{ once: true }}
-                  className="p-8 border border-border rounded-lg hover:shadow-lg transition-shadow"
+                  whileHover={{ scale: 1.05, y: -12 }}
+                  className="p-8 border border-border rounded-lg hover:shadow-2xl transition-all duration-300 bg-white/50 backdrop-blur-sm"
                 >
-                  <Icon className="h-12 w-12 text-accent mb-4" />
+                  <motion.div variants={floatingVariants} animate="animate">
+                    <Icon className="h-12 w-12 text-accent mb-4" />
+                  </motion.div>
                   <h3 className="text-xl font-bold text-primary mb-2">{item.title}</h3>
                   <p className="text-muted-foreground">{item.desc}</p>
                 </motion.div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section with 3D Effect */}
+      <section className="py-16 bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { number: "20+", label: "Years Experience" },
+              { number: "500+", label: "Partner Farmers" },
+              { number: "50K+", label: "MT Exported Annually" },
+              { number: "100+", label: "Global Buyers" },
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.1 }}
+                className="text-center"
+              >
+                <motion.div
+                  className="text-4xl md:text-5xl font-bold mb-2 text-accent"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: idx * 0.2 }}
+                >
+                  {stat.number}
+                </motion.div>
+                <p className="text-primary-foreground/80">{stat.label}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -238,14 +298,24 @@ export default function Home() {
           <p className="text-lg opacity-90 mb-8">Join hundreds of wholesale buyers who trust KINSA Global for consistent quality and competitive pricing.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Create Partner Account
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  Create Partner Account
+                </Button>
+              </motion.div>
             </Link>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10">
-                Contact Sales
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10">
+                  Contact Sales
+                </Button>
+              </motion.div>
             </Link>
           </div>
         </motion.div>

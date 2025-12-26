@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         queryParams: {
           prompt: 'select_account',
         },
+        redirectTo: `${window.location.origin}/dashboard`,
       },
     });
     if (error) throw error;

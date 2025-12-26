@@ -134,4 +134,19 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif tracking-tight text-primary;
   }
+  
+  /* Smooth scrolling for anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+  }
+  
+  /* Ensure proper box sizing */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
 }

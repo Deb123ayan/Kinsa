@@ -50,7 +50,8 @@ export default function Cart() {
           <div className="flex-1 space-y-6">
             {cart.length > 0 ? (
               <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
-                <div className="p-4 bg-secondary/30 border-b border-border font-medium text-sm grid grid-cols-12 gap-4">
+                {/* Desktop Header */}
+                <div className="hidden md:block p-4 bg-secondary/30 border-b border-border font-medium text-sm grid grid-cols-12 gap-4">
                   <div className="col-span-6">Product</div>
                   <div className="col-span-2 text-center">Price</div>
                   <div className="col-span-2 text-center">Quantity (MT)</div>
@@ -59,37 +60,80 @@ export default function Cart() {
                 
                 <div className="divide-y divide-border">
                   {cart.map((item) => (
-                    <div key={item.product.id} className="p-4 grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-6 flex gap-4">
-                        <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
-                          <img src={item.product.image} alt="" className="h-full w-full object-cover" />
+                    <div key={item.product.id} className="p-4">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-4">
+                        <div className="flex gap-4">
+                          <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
+                            <img src={item.product.image} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-primary truncate">{item.product.name}</h4>
+                            <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
+                            <div className="text-sm font-medium text-primary mt-1">
+                              {formatPrice(item.product.price)} / MT
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                            onClick={() => removeFromCart(item.product.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <div>
-                          <h4 className="font-bold text-primary">{item.product.name}</h4>
-                          <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">Quantity:</span>
+                            <Input 
+                              type="number" 
+                              value={item.quantity} 
+                              onChange={(e) => updateQuantity(item.product.id, Number(e.target.value))}
+                              className="w-20 text-center h-8"
+                            />
+                            <span className="text-sm text-muted-foreground">MT</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-muted-foreground">Total</div>
+                            <div className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</div>
+                          </div>
                         </div>
                       </div>
-                      <div className="col-span-2 text-center text-sm">
-                        {formatPrice(item.product.price)}
-                      </div>
-                      <div className="col-span-2 flex justify-center">
-                         <Input 
-                          type="number" 
-                          value={item.quantity} 
-                          onChange={(e) => updateQuantity(item.product.id, Number(e.target.value))}
-                          className="w-16 text-center h-8"
-                         />
-                      </div>
-                      <div className="col-span-2 flex items-center justify-end gap-4">
-                        <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeFromCart(item.product.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                        <div className="col-span-6 flex gap-4">
+                          <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
+                            <img src={item.product.image} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-primary">{item.product.name}</h4>
+                            <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
+                          </div>
+                        </div>
+                        <div className="col-span-2 text-center text-sm">
+                          {formatPrice(item.product.price)}
+                        </div>
+                        <div className="col-span-2 flex justify-center">
+                           <Input 
+                            type="number" 
+                            value={item.quantity} 
+                            onChange={(e) => updateQuantity(item.product.id, Number(e.target.value))}
+                            className="w-16 text-center h-8"
+                           />
+                        </div>
+                        <div className="col-span-2 flex items-center justify-end gap-4">
+                          <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => removeFromCart(item.product.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -111,7 +155,7 @@ export default function Cart() {
 
           {/* Summary */}
           <div className="w-full lg:w-96 shrink-0">
-            <div className="bg-white rounded-lg border border-border shadow-sm p-6 sticky top-24">
+            <div className="bg-white rounded-lg border border-border shadow-sm p-4 md:p-6 lg:sticky lg:top-24">
               <h3 className="font-serif text-xl font-bold text-primary mb-6">Estimated Cost</h3>
               
               <div className="space-y-4 text-sm">
@@ -125,17 +169,17 @@ export default function Cart() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax / Duty</span>
-                  <span className="font-medium text-muted-foreground italic">Calculated at checkout</span>
+                  <span className="font-medium text-muted-foreground italic text-xs">Calculated at checkout</span>
                 </div>
                 
                 <Separator />
                 
                 <div className="flex justify-between items-end">
                   <span className="font-bold text-primary text-lg">Est. Total</span>
-                  <span className="font-bold text-primary text-2xl">{formatPrice(total)}</span>
+                  <span className="font-bold text-primary text-xl md:text-2xl">{formatPrice(total)}</span>
                 </div>
                 
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
                   *Final pricing including freight (CIF) will be confirmed by our sales team within 24 hours of inquiry submission.
                 </p>
                 

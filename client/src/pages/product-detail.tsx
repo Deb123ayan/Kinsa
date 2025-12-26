@@ -138,8 +138,18 @@ export default function ProductDetail() {
                   <Button size="lg" className="flex-1 bg-accent hover:bg-accent/90 text-white" onClick={handleAddToCart}>
                     <ShoppingCart className="mr-2 h-5 w-5" /> {isLoggedIn ? "Add to Inquiry" : "Login to Inquire"}
                   </Button>
-                  <Button size="lg" variant="outline" className="flex-1 border-primary text-primary hover:bg-primary hover:text-white">
-                    Request Sample
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="flex-1 border-primary text-primary hover:bg-primary hover:text-white"
+                    onClick={() => {
+                      const detailsSection = document.getElementById('product-details');
+                      if (detailsSection) {
+                        detailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                  >
+                    View Details
                   </Button>
                 </div>
               </div>
@@ -162,11 +172,26 @@ export default function ProductDetail() {
                  </div>
               </div>
             </div>
+
+            {/* Request Sample Button */}
+            <div className="pt-4 border-t border-border">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full border-primary text-primary hover:bg-primary hover:text-white"
+                onClick={() => {
+                  // Add sample request functionality
+                  console.log('Sample requested for:', product.name);
+                }}
+              >
+                Request Sample
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="mb-20">
+        <div className="mb-20" id="product-details">
           <Tabs defaultValue="specs">
             <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
               <TabsTrigger 

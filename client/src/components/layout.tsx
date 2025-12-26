@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Ship, ShoppingCart, Globe, Phone, FileText, Menu, X, Anchor, LogOut, LayoutDashboard } from "lucide-react";
+import { ShoppingCart, Globe, Phone, FileText, Menu, Anchor, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { useCart } from "@/context/cart-context";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const { isLoggedIn, user, logout, getUserDisplayName } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const { cartCount } = useCart();
 
   const navLinks = [
@@ -56,23 +56,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-x-hidden">
-        <div className="container mx-auto flex h-16 md:h-20 items-center justify-between px-4">
+        <div className="container mx-auto flex h-16 md:h-20 items-center px-4">
           
           {/* Logo */}
           <Link href={isLoggedIn ? "/dashboard" : "/"}>
-            <div className="flex items-center gap-2 group cursor-pointer">
-              <div className="bg-primary text-primary-foreground p-2 rounded-sm group-hover:bg-accent transition-colors shrink-0">
-                <Ship className="h-6 w-6" />
+            <div className="flex items-center gap-2 group cursor-pointer drop-shadow-lg hover:drop-shadow-xl transition-all">
+              <div className="rounded-full overflow-hidden shadow-lg shadow-black/30 group-hover:ring-2 group-hover:ring-accent/30 group-hover:shadow-xl group-hover:shadow-black/40 transition-all shrink-0">
+                <img 
+                  src="/logo_favicon.jpeg" 
+                  alt="KINSA Global Logo" 
+                  className="h-16 w-16 object-cover"
+                />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-serif text-xl font-bold leading-none tracking-tight text-primary whitespace-nowrap">KINSA</span>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground whitespace-nowrap">Global Exim</span>
+                <span className="font-serif text-xl font-bold leading-none tracking-tight text-primary whitespace-nowrap drop-shadow-sm">KINSA</span>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground whitespace-nowrap drop-shadow-sm">Global Exim</span>
               </div>
             </div>
           </Link>
 
           {/* Desktop Nav */}
-          {isLoggedIn ? null : <NavContent className="hidden md:flex items-center gap-8" />}
+          {isLoggedIn ? null : <NavContent className="hidden md:flex items-center gap-8 mx-8 flex-1 justify-center" />}
 
           {/* Actions */}
           <div className="flex items-center gap-2 md:gap-4 min-w-0 justify-end ml-auto">
@@ -149,9 +153,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
           
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Ship className="h-6 w-6 text-accent shrink-0" />
-              <span className="font-serif text-xl font-bold whitespace-nowrap">KINSA</span>
+            <div className="flex items-center gap-2 drop-shadow-md">
+              <div className="rounded-full overflow-hidden shadow-lg shadow-black/20 shrink-0">
+                <img 
+                  src="/logo_favicon.jpeg" 
+                  alt="KINSA Global Logo" 
+                  className="h-12 w-12 object-cover"
+                />
+              </div>
+              <span className="font-serif text-xl font-bold whitespace-nowrap drop-shadow-sm">KINSA</span>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
               Connecting global markets with premium quality grains, spices, and pulses. 

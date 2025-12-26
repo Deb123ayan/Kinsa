@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
+import { useLocation } from 'wouter';
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Get initial session
@@ -33,14 +35,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Redirect to dashboard after successful sign in
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Check if we're not already on dashboard to avoid infinite redirects
+        if (window.location.pathname !== '/dashboard') {
+          setLocation('/dashboard');
+        }
+      }
+      
+      // Redirect to auth page after sign out
+      if (event === 'SIGNED_OUT') {
+        setLocation('/auth');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setLocation]);
 
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -48,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
     if (error) throw error;
+    // Redirect will be handled by the auth state change listener
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
@@ -61,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
     if (error) throw error;
+    // Redirect will be handled by the auth state change listener
   };
 
   const logout = async () => {
@@ -75,10 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         queryParams: {
           prompt: 'select_account',
         },
-        redirectTo: `${window.location.origin}/dashboard`,
       },
     });
     if (error) throw error;
+    // Redirect will be handled by the auth state change listener
   };
 
   const resetPassword = async (email: string) => {

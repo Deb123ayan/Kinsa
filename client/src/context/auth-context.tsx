@@ -9,8 +9,10 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  getUserDisplayName: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,9 +68,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        queryParams: {
+          prompt: 'select_account',
+        },
+      },
+    });
+    if (error) throw error;
+  };
+
   const resetPassword = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
+  };
+
+  const getUserDisplayName = () => {
+    if (!user) return '';
+    
+    // Try to get first name from user metadata
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
+    if (fullName) {
+      const firstName = fullName.split(' ')[0];
+      return firstName;
+    }
+    
+    // Fallback to email if no name available
+    return user.email?.split('@')[0] || 'User';
   };
 
   const value = {
@@ -78,8 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     login,
     signUp,
+    signInWithGoogle,
     logout,
     resetPassword,
+    getUserDisplayName,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

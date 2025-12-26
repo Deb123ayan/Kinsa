@@ -5,14 +5,17 @@
 ### 🔐 Authentication Features
 - **Sign Up**: New user registration with email verification
 - **Sign In**: Email/password authentication
+- **Google OAuth**: One-click sign in with Google
 - **Sign Out**: Secure logout functionality
 - **Password Reset**: Forgot password with email reset link
 - **Protected Routes**: Route guards for authenticated content
 - **Persistent Sessions**: Auto-login on page refresh
 - **Real-time Auth State**: Reactive authentication status
+- **User Display Names**: Shows first name instead of email in UI
 
 ### 🎨 UI Components
 - **AuthModal**: Modal with sign in/sign up/forgot password forms
+- **Google Sign In**: Prominent Google OAuth buttons
 - **Navigation**: Header with auth buttons and user profile dropdown
 - **UserProfile**: User dropdown with profile info and logout
 - **AuthGuard**: Component to protect content for authenticated users
@@ -20,11 +23,13 @@
 
 ### 🔧 Technical Implementation
 - **Supabase Auth**: Real authentication with Supabase backend
+- **Google OAuth**: Integrated Google sign-in provider
 - **React Context**: Global auth state management
 - **Form Validation**: Zod schema validation with React Hook Form
 - **Error Handling**: User-friendly error messages
 - **Loading States**: Proper loading indicators
 - **TypeScript**: Full type safety
+- **User Metadata**: Proper handling of user names and display preferences
 
 ## 🚀 How to Use
 
@@ -113,6 +118,20 @@ Create a `.env` file in the `client/` directory with your Supabase credentials:
 VITE_SUPABASE_URL=https://uzydtljwbzcybqeephen.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6eWR0bGp3YnpjeWJxZWVwaGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NTUyNDksImV4cCI6MjA4MjIzMTI0OX0.lW4fF3gIB31c68lMfWdkv1Gmn4C36Myg4dDVegrgUEg
 ```
+
+### Google OAuth Setup
+Google authentication is configured in your Supabase dashboard:
+
+1. **Supabase Dashboard**: Go to Authentication > Providers
+2. **Google Provider**: Enable Google OAuth
+3. **Client ID & Secret**: Add your Google OAuth credentials
+4. **Redirect URLs**: Configure authorized redirect URIs
+5. **Scopes**: Default scopes include profile and email
+
+The Google sign-in will automatically:
+- Create user accounts on first sign-in
+- Store user's name and email from Google
+- Redirect to dashboard after successful authentication
 
 ## 📧 Email Configuration
 

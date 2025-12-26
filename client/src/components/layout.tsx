@@ -10,7 +10,7 @@ import { useCart } from "@/context/cart-context";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, logout, getUserDisplayName } = useAuth();
   const { cartCount } = useCart();
 
   const navLinks = [

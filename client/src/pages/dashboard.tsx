@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { formatPrice } from "@/lib/currency";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, getUserDisplayName } = useAuth();
   const { cart, addToCart, removeFromCart, cartTotal } = useCart();
 
   // Mock Orders
@@ -45,7 +45,7 @@ export default function Dashboard() {
             animate={{ x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h1 className="font-serif text-3xl font-bold text-primary">Welcome, {user?.email}!</h1>
+            <h1 className="font-serif text-3xl font-bold text-primary">Welcome, {getUserDisplayName()}!</h1>
             <p className="text-muted-foreground">KINSA Global - Your Partner Portal</p>
           </motion.div>
           <motion.div

@@ -16,6 +16,30 @@ export default function Cart() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  const handleRemoveFromCart = async (productId: string) => {
+    try {
+      await removeFromCart(productId);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove item from cart.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateQuantity = async (productId: string, quantity: number) => {
+    try {
+      await updateQuantity(productId, quantity);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update quantity.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCheckout = () => {
     if (!isLoggedIn) {
       toast({
@@ -78,7 +102,7 @@ export default function Cart() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                            onClick={() => removeFromCart(item.product.id)}
+                            onClick={() => handleRemoveFromCart(item.product.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -89,7 +113,7 @@ export default function Cart() {
                             <Input 
                               type="number" 
                               value={item.quantity} 
-                              onChange={(e) => updateQuantity(item.product.id, Number(e.target.value))}
+                              onChange={(e) => handleUpdateQuantity(item.product.id, Number(e.target.value))}
                               className="w-20 text-center h-8"
                             />
                             <span className="text-sm text-muted-foreground">MT</span>
@@ -119,7 +143,7 @@ export default function Cart() {
                            <Input 
                             type="number" 
                             value={item.quantity} 
-                            onChange={(e) => updateQuantity(item.product.id, Number(e.target.value))}
+                            onChange={(e) => handleUpdateQuantity(item.product.id, Number(e.target.value))}
                             className="w-16 text-center h-8"
                            />
                         </div>
@@ -129,7 +153,7 @@ export default function Cart() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeFromCart(item.product.id)}
+                            onClick={() => handleRemoveFromCart(item.product.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -12,13 +12,30 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/currency";
+import { createOrder, type OrderData } from "@/services/orders";
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const { isLoggedIn } = useAuth();
   const { cart, clearCart, cartTotal } = useCart();
   const [, setLocation] = useLocation();
+
+  // Form data
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    companyName: '',
+    email: '',
+    phone: '',
+    iecTaxId: '',
+    shippingAddress: '',
+    city: '',
+    country: '',
+    incoterms: '',
+    specialInstructions: '',
+  });
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -30,17 +47,72 @@ export default function Checkout() {
     return null;
   }
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Inquiry Sent Successfully!",
-      description: "Our sales team will contact you within 24 hours with a formal invoice.",
-    });
-    clearCart();
-    setTimeout(() => setLocation("/dashboard"), 2000);
+    
+    if (cart.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Please add items to your cart before placing an order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const estimatedShipping = 120000;
+      
+      const orderData: OrderData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        companyName: formData.companyName,
+        email: formData.email,
+        phone: formData.phone,
+        iecTaxId: formData.iecTaxId || undefined,
+        shippingAddress: formData.shippingAddress,
+        city: formData.city,
+        country: formData.country,
+        incoterms: formData.incoterms,
+        specialInstructions: formData.specialInstructions || undefined,
+        items: cart,
+        shippingCost: estimatedShipping,
+      };
+
+      const result = await createOrder(orderData);
+
+      if (result.success) {
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your order has been placed and stock has been reserved. Our sales team will contact you within 24 hours.",
+        });
+        await clearCart();
+        setTimeout(() => setLocation("/dashboard"), 2000);
+      } else {
+        toast({
+          title: "Order Failed",
+          description: result.error || "Failed to place order. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Order submission error:', error);
+      toast({
+        title: "Order Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const estimatedShipping = 120000;
@@ -96,28 +168,58 @@ export default function Checkout() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>First Name</Label>
-                        <Input placeholder="John" required />
+                        <Input 
+                          placeholder="John" 
+                          value={formData.firstName}
+                          onChange={(e) => handleInputChange('firstName', e.target.value)}
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Last Name</Label>
-                        <Input placeholder="Doe" required />
+                        <Input 
+                          placeholder="Doe" 
+                          value={formData.lastName}
+                          onChange={(e) => handleInputChange('lastName', e.target.value)}
+                          required 
+                        />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Company Name</Label>
-                      <Input placeholder="Your Company Name" required />
+                      <Input 
+                        placeholder="Your Company Name" 
+                        value={formData.companyName}
+                        onChange={(e) => handleInputChange('companyName', e.target.value)}
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Business Email</Label>
-                      <Input type="email" placeholder="email@company.com" required />
+                      <Input 
+                        type="email" 
+                        placeholder="email@company.com" 
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                        <Label>Phone Number (WhatsApp preferred)</Label>
-                       <Input placeholder="+91 ..." required />
+                       <Input 
+                         placeholder="+91 ..." 
+                         value={formData.phone}
+                         onChange={(e) => handleInputChange('phone', e.target.value)}
+                         required 
+                       />
                     </div>
                     <div className="space-y-2">
                       <Label>Import Export Code (IEC) / Tax ID</Label>
-                      <Input placeholder="Optional" />
+                      <Input 
+                        placeholder="Optional" 
+                        value={formData.iecTaxId}
+                        onChange={(e) => handleInputChange('iecTaxId', e.target.value)}
+                      />
                     </div>
                   </div>
                 )}
@@ -127,16 +229,26 @@ export default function Checkout() {
                   <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-2">
                       <Label>Shipping Address</Label>
-                      <Input placeholder="Street address, Port, etc." required />
+                      <Input 
+                        placeholder="Street address, Port, etc." 
+                        value={formData.shippingAddress}
+                        onChange={(e) => handleInputChange('shippingAddress', e.target.value)}
+                        required 
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>City / Port</Label>
-                        <Input placeholder="Dubai" required />
+                        <Input 
+                          placeholder="Dubai" 
+                          value={formData.city}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Country</Label>
-                        <Select>
+                        <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select destination" />
                           </SelectTrigger>
@@ -151,7 +263,7 @@ export default function Checkout() {
                     </div>
                     <div className="space-y-2">
                        <Label>Preferred Incoterms</Label>
-                       <Select>
+                       <Select value={formData.incoterms} onValueChange={(value) => handleInputChange('incoterms', value)}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select terms" />
                           </SelectTrigger>
@@ -164,7 +276,11 @@ export default function Checkout() {
                     </div>
                     <div className="space-y-2">
                       <Label>Special Instructions</Label>
-                      <Input placeholder="Packaging requirements, delivery windows..." />
+                      <Input 
+                        placeholder="Packaging requirements, delivery windows..." 
+                        value={formData.specialInstructions}
+                        onChange={(e) => handleInputChange('specialInstructions', e.target.value)}
+                      />
                     </div>
                   </div>
                 )}
@@ -226,8 +342,12 @@ export default function Checkout() {
                       Next Step
                     </Button>
                   ) : (
-                    <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto">
-                      Submit Inquiry
+                    <Button 
+                      type="submit" 
+                      className="bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto"
+                      disabled={submitting}
+                    >
+                      {submitting ? "Placing Order..." : "Place Order"}
                     </Button>
                   )}
                 </div>

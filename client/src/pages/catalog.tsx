@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Link, useSearch, useLocation } from "wouter";
+import React, { useState, useEffect } from "react";
+import { useSearch, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { ProductCard } from "@/components/product-card";
-import { PRODUCTS, CATEGORIES } from "@/data/mock-data";
+import { CATEGORIES } from "@/data/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -10,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter } from "lucide-react";
+import { fetchProducts, type Product } from "@/services/products";
 
 export default function Catalog() {
   const searchString = useSearch();
@@ -25,9 +26,40 @@ export default function Catalog() {
     initialCategory ? [initialCategory] : []
   );
   const [priceRange, setPriceRange] = useState([0, 3500000]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load products from database
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const fetchedProducts = await fetchProducts();
+        setProducts(fetchedProducts);
+        
+        // Update price range based on actual product prices
+        if (fetchedProducts.length > 0) {
+          const prices = fetchedProducts.map(p => p.price);
+          const maxPrice = Math.max(...prices);
+          setPriceRange([0, maxPrice]);
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        toast({
+          title: "Error Loading Products",
+          description: "Failed to load products from database.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [toast]);
 
   // Filter Logic
-  const filteredProducts = PRODUCTS.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     // Search Text
     if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
@@ -170,7 +202,15 @@ export default function Catalog() {
             </div>
 
             {/* Results Grid */}
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="animate-pulse">
+                    <div className="bg-secondary/20 rounded-lg h-80"></div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredProducts.map(product => (
                   <div key={product.id} onClick={handleProductClick}>

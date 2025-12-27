@@ -2,23 +2,41 @@ import { ArrowRight, CheckCircle2, Globe2, ShieldCheck, Leaf } from "lucide-reac
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, PRODUCTS } from "@/data/mock-data";
+import { CATEGORIES } from "@/data/mock-data";
 import { ProductCard } from "@/components/product-card";
 import heroImg from "@assets/generated_images/cargo_ship_global_trade_with_wheat_and_spices_overlay.png";
 import { useAuth } from "@/context/auth-context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { fetchProducts, type Product } from "@/services/products";
 
 export default function Home() {
   const { isLoggedIn } = useAuth();
   const [, setLocation] = useLocation();
-  const featuredProducts = PRODUCTS.slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isLoggedIn) {
       setLocation("/dashboard");
     }
   }, [isLoggedIn, setLocation]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const products = await fetchProducts();
+        setFeaturedProducts(products.slice(0, 4));
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setFeaturedProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   if (isLoggedIn) {
     return null;
@@ -173,18 +191,31 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {featuredProducts.map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: idx * 0.05 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -8 }}
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="animate-pulse">
+                  <div className="bg-secondary/20 rounded-lg h-80 mb-4"></div>
+                </div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product, idx) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: idx * 0.05 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -8 }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No products available at the moment.</p>
+              </div>
+            )}
           </div>
 
           <div className="text-center">

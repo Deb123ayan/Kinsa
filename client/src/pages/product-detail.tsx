@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { Layout } from "@/components/layout";
-import { PRODUCTS } from "@/data/mock-data";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +11,7 @@ import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { ArrowLeft, Minus, Plus, ShoppingCart, Truck, ShieldCheck, FileCheck } from "lucide-react";
 import { formatPriceWithUnit, formatPrice } from "@/lib/currency";
+import { fetchProductById, type Product } from "@/services/products";
 
 export default function ProductDetail() {
   const [match, params] = useRoute("/product/:id");
@@ -19,10 +19,60 @@ export default function ProductDetail() {
   const { isLoggedIn } = useAuth();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(10);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      if (!match || !params?.id) return;
+      
+      try {
+        setLoading(true);
+        const fetchedProduct = await fetchProductById(params.id);
+        setProduct(fetchedProduct);
+      } catch (error) {
+        console.error('Failed to load product:', error);
+        toast({
+          title: "Error Loading Product",
+          description: "Failed to load product details.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [match, params?.id, toast]);
 
   if (!match || !params) return <div>Product not found</div>;
 
-  const product = PRODUCTS.find(p => p.id === params.id);
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="animate-pulse">
+            <div className="h-4 bg-secondary/20 rounded w-1/3 mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="space-y-4">
+                <div className="aspect-[4/3] bg-secondary/20 rounded-lg"></div>
+                <div className="grid grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="aspect-square bg-secondary/20 rounded-md"></div>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-6">
+                <div className="h-8 bg-secondary/20 rounded w-3/4"></div>
+                <div className="h-4 bg-secondary/20 rounded w-full"></div>
+                <div className="h-4 bg-secondary/20 rounded w-2/3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!product) {
     return (
@@ -35,7 +85,7 @@ export default function ProductDetail() {
     );
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!isLoggedIn) {
       toast({
         title: "Please Login",
@@ -44,11 +94,22 @@ export default function ProductDetail() {
       });
       return;
     }
-    addToCart(product, quantity);
-    toast({
-      title: "Added to Cart",
-      description: `${quantity} ${product.unit} of ${product.name} added to your inquiry list.`,
-    });
+    
+    if (!product) return;
+    
+    try {
+      await addToCart(product, quantity);
+      toast({
+        title: "Added to Cart",
+        description: `${quantity} ${product.unit} of ${product.name} added to your inquiry list.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

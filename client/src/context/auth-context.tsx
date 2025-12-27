@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Get initial session
@@ -33,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -66,6 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    
+    // Redirect to home page after successful logout
+    setLocation('/');
   };
 
   const signInWithGoogle = async () => {

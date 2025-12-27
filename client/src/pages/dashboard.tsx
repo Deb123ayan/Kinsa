@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -6,29 +6,151 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Truck, Clock, CheckCircle2, FileText, ShoppingCart } from "lucide-react";
+import { Package, Truck, Clock, FileText, ShoppingCart, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { ProductCard } from "@/components/product-card";
-import { PRODUCTS } from "@/data/mock-data";
 import { motion } from "framer-motion";
 import { formatPrice } from "@/lib/currency";
+import { getUserOrders, cancelOrder, type Order } from "@/services/orders";
+import { fetchProducts, type Product } from "@/services/products";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  const { user, getUserDisplayName } = useAuth();
-  const { cart, addToCart, removeFromCart, cartTotal } = useCart();
+  const { getUserDisplayName, isLoggedIn, loading: authLoading } = useAuth();
+  const { cart, removeFromCart, cartTotal } = useCart();
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
-  // Mock Orders
-  const orders = [
-    { id: "ORD-2024-001", date: "2024-12-01", items: "Sharbati Wheat (50 MT)", total: formatPrice(1750000), status: "Delivered", statusColor: "default" },
-    { id: "ORD-2024-005", date: "2024-12-15", items: "Teja Red Chili (10 MT)", total: formatPrice(2500000), status: "In Transit", statusColor: "secondary" },
-    { id: "ORD-2024-008", date: "2024-12-20", items: "Basmati Rice (100 MT)", total: formatPrice(9500000), status: "Processing", statusColor: "outline" },
-  ];
+  // Load orders separately
+  useEffect(() => {
+    const loadOrders = async () => {
+      if (!isLoggedIn || authLoading) return;
+      
+      try {
+        setOrdersLoading(true);
+        setOrdersError(null);
+        const ordersData = await getUserOrders();
+        setOrders(ordersData);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+        setOrdersError('Failed to load order history');
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [isLoggedIn, authLoading]);
+
+  // Load products separately
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setProductsLoading(true);
+        setProductsError(null);
+        const productsData = await fetchProducts();
+        setFeaturedProducts(productsData.slice(0, 4));
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setProductsError('Failed to load featured products');
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  // Retry functions
+  const retryLoadOrders = async () => {
+    if (!isLoggedIn || authLoading) return;
+    
+    try {
+      setOrdersLoading(true);
+      setOrdersError(null);
+      const ordersData = await getUserOrders();
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Failed to load orders:', error);
+      setOrdersError('Failed to load order history');
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const retryLoadProducts = async () => {
+    try {
+      setProductsLoading(true);
+      setProductsError(null);
+      const productsData = await fetchProducts();
+      setFeaturedProducts(productsData.slice(0, 4));
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      setProductsError('Failed to load featured products');
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    try {
+      const result = await cancelOrder(orderId);
+      if (result.success) {
+        toast({
+          title: "Order Cancelled",
+          description: "Order has been cancelled and stock has been restored.",
+        });
+        // Refresh orders
+        setOrdersLoading(true);
+        const updatedOrders = await getUserOrders();
+        setOrders(updatedOrders);
+        setOrdersLoading(false);
+      } else {
+        toast({
+          title: "Cancellation Failed",
+          description: result.error || "Failed to cancel order.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Cancellation Failed",
+        description: "An error occurred while cancelling the order.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Calculate stats from real orders
+  const activeOrders = orders.filter((order: Order) => order.status === 'processing' || order.status === 'pending').length;
+  const totalVolume = orders.reduce((sum: number, order: Order) => {
+    return sum + order.items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0);
+  }, 0);
+  const pendingOrders = orders.filter((order: Order) => order.status === 'pending').length;
 
   const statCards = [
-    { icon: Truck, label: "Active Shipments", value: "2", sub: "1 at sea, 1 at port" },
-    { icon: Clock, label: "Pending Invoices", value: "1", sub: "Due in 5 days" },
-    { icon: Package, label: "Total Volume (YTD)", value: "450 MT", sub: "+12% from last year" },
+    { icon: Truck, label: "Active Orders", value: activeOrders.toString(), sub: `${pendingOrders} pending, ${activeOrders - pendingOrders} processing` },
+    { icon: Clock, label: "Total Orders", value: orders.length.toString(), sub: "All time" },
+    { icon: Package, label: "Total Volume", value: `${totalVolume} MT`, sub: "Across all orders" },
   ];
 
   return (
@@ -117,18 +239,39 @@ export default function Dashboard() {
                 <TabsContent value="products" className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-primary mb-4">Featured Products</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                      {PRODUCTS.map((product, idx) => (
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: idx * 0.05 }}
+                    {productsError ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>{productsError}</p>
+                        <Button 
+                          variant="outline" 
+                          onClick={retryLoadProducts} 
+                          className="mt-2"
                         >
-                          <ProductCard product={product} />
-                        </motion.div>
-                      ))}
-                    </div>
+                          Retry
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        {productsLoading ? (
+                          Array.from({ length: 3 }).map((_, idx) => (
+                            <div key={idx} className="animate-pulse">
+                              <div className="bg-secondary/20 rounded-lg h-80"></div>
+                            </div>
+                          ))
+                        ) : (
+                          featuredProducts.map((product: Product, idx: number) => (
+                            <motion.div
+                              key={product.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.5, delay: idx * 0.05 }}
+                            >
+                              <ProductCard product={product} />
+                            </motion.div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Current Cart */}
@@ -182,29 +325,91 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map((order, idx) => (
-                        <motion.tr
-                          key={order.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: idx * 0.1 }}
-                        >
-                          <TableCell className="font-medium">{order.id}</TableCell>
-                          <TableCell>{order.date}</TableCell>
-                          <TableCell>{order.items}</TableCell>
-                          <TableCell className="font-medium text-primary">{order.total}</TableCell>
-                          <TableCell>
-                            <Badge variant={order.statusColor as "default" | "secondary" | "outline" | "destructive"}>
-                              {order.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              <FileText className="h-4 w-4 mr-1" /> Invoice
+                      {ordersError ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            <p>{ordersError}</p>
+                            <Button 
+                              variant="outline" 
+                              onClick={retryLoadOrders} 
+                              className="mt-2"
+                            >
+                              Retry
                             </Button>
                           </TableCell>
-                        </motion.tr>
-                      ))}
+                        </TableRow>
+                      ) : ordersLoading ? (
+                        Array.from({ length: 3 }).map((_, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
+                            <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
+                            <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
+                            <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
+                            <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
+                            <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
+                          </TableRow>
+                        ))
+                      ) : orders.length > 0 ? (
+                        orders.map((order, idx) => (
+                          <motion.tr
+                            key={order.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: idx * 0.1 }}
+                          >
+                            <TableCell className="font-medium">ORD-{order.id}</TableCell>
+                            <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              {order.items.length > 0 ? (
+                                <div>
+                                  {order.items[0].product.name} ({order.items[0].quantity} MT)
+                                  {order.items.length > 1 && (
+                                    <span className="text-muted-foreground"> +{order.items.length - 1} more</span>
+                                  )}
+                                </div>
+                              ) : (
+                                'No items'
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium text-primary">
+                              {formatPrice(order.total_amount + order.shipping_cost)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                order.status === 'delivered' ? 'default' :
+                                order.status === 'processing' ? 'secondary' :
+                                order.status === 'cancelled' ? 'destructive' :
+                                'outline'
+                              }>
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="ghost" size="sm">
+                                  <FileText className="h-4 w-4 mr-1" /> Details
+                                </Button>
+                                {order.status === 'pending' && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleCancelOrder(order.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <X className="h-4 w-4 mr-1" /> Cancel
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </motion.tr>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            No orders found. <Link href="/catalog"><Button variant="link" className="p-0 h-auto">Browse products</Button></Link> to get started.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </TabsContent>

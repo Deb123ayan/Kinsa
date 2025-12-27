@@ -5,8 +5,26 @@ import { CheckCircle2, History, TrendingUp, Users } from "lucide-react";
 export default function About() {
   return (
     <Layout>
-      <div className="bg-primary py-20 text-primary-foreground text-center">
-        <div className="container mx-auto px-4">
+      <div className="relative bg-primary py-20 text-primary-foreground text-center overflow-hidden">
+        {/* Background Video */}
+        <div className="absolute inset-0">
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            className="h-full w-full object-cover opacity-70 brightness-110 contrast-105 saturate-90"
+            onError={(e) => {
+              console.log('Video failed to load on about page');
+              e.currentTarget.style.display = 'none';
+            }}
+          >
+            <source src="/ad.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/50 to-primary/70" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
           <h1 className="font-serif text-5xl font-bold mb-6">
             Our Legacy of Trust
           </h1>

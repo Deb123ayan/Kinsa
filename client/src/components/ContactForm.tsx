@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { sendEmail } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { submitContactQuery } from '@/services/contact'
+import { useToast } from '@/hooks/use-toast'
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -20,6 +21,7 @@ type ContactForm = z.infer<typeof contactSchema>
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
   
   const {
     register,
@@ -34,36 +36,43 @@ export function ContactForm() {
     setIsSubmitting(true)
     
     try {
-      const result = await sendEmail({
-        to: 'mukherjeed556@gmail.com',
-        subject: data.subject,
-        message: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          subject: data.subject,
-          message: data.message
-        }),
-      })
+      const result = await submitContactQuery(data);
 
       if (result.success) {
-        toast.success('Message sent successfully!')
+        toast({
+          title: "Message sent successfully!",
+          description: "We'll get back to you as soon as possible.",
+        })
         reset()
       } else {
-        toast.error('Failed to send message. Please try again.')
+        toast({
+          title: "Failed to send message",
+          description: result.error || "Please try again or contact us directly.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error('Error sending email:', error)
-      toast.error('Failed to send message. Please try again.')
+      console.error('Error submitting contact form:', error)
+      toast({
+        title: "Failed to send message",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Contact Us</h2>
-      
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <Card className="shadow-md">
+      <CardHeader>
+        <CardTitle className="text-2xl font-serif text-primary">Contact Our Team</CardTitle>
+        <p className="text-muted-foreground">
+          Get in touch with our export specialists for personalized assistance.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="name">Name</Label>
           <Input
@@ -120,12 +129,13 @@ export function ContactForm() {
 
         <Button 
           type="submit" 
-          className="w-full"
+          className="w-full bg-accent hover:bg-accent/90 text-white"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Sending...' : 'Send Message'}
         </Button>
       </form>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

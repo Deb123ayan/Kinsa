@@ -57,12 +57,30 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-[600px] w-full overflow-hidden bg-primary">
         <div className="absolute inset-0">
+          {/* Background Video */}
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            className="h-full w-full object-cover opacity-80 brightness-110 contrast-110 saturate-90"
+            poster={heroImg}
+            onLoadStart={() => console.log('Video loading started')}
+            onError={(e) => {
+              console.log('Video failed to load, falling back to image');
+              // Hide video and show fallback image
+              e.currentTarget.style.display = 'none';
+            }}
+          >
+            <source src="/ad.mp4" type="video/mp4" />
+          </video>
+          {/* Fallback image - always present but behind video */}
           <img 
             src={heroImg} 
             alt="Global Trade" 
-            className="h-full w-full object-cover opacity-60"
+            className="absolute inset-0 h-full w-full object-cover opacity-80 -z-10"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/40 to-primary/60" />
         </div>
 
         {/* Animated background elements */}

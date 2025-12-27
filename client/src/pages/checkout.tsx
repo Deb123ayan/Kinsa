@@ -13,10 +13,12 @@ import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/currency";
 import { createOrder, type OrderData } from "@/services/orders";
+import { RazorpayPayment } from "@/components/RazorpayPayment";
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [orderId, setOrderId] = useState<number | null>(null);
   const { toast } = useToast();
   const { isLoggedIn } = useAuth();
   const { cart, clearCart, cartTotal } = useCart();
@@ -69,7 +71,7 @@ export default function Checkout() {
     setSubmitting(true);
 
     try {
-      const estimatedShipping = 120000;
+      const estimatedShipping = 5000; // Reduced for testing (₹50 instead of ₹1200)
       
       const orderData: OrderData = {
         firstName: formData.firstName,
@@ -89,22 +91,22 @@ export default function Checkout() {
 
       const result = await createOrder(orderData);
 
-      if (result.success) {
+      if (result.success && result.orderId) {
+        setOrderId(result.orderId);
+        setStep(3); // Move to payment step
         toast({
-          title: "Order Placed Successfully!",
-          description: "Your order has been placed and stock has been reserved. Our sales team will contact you within 24 hours.",
+          title: "Order Created Successfully!",
+          description: "Please proceed with payment to confirm your order.",
         });
-        await clearCart();
-        setTimeout(() => setLocation("/dashboard"), 2000);
       } else {
         toast({
           title: "Order Failed",
-          description: result.error || "Failed to place order. Please try again.",
+          description: result.error || "Failed to create order. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Order submission error:', error);
+      console.error('Order creation error:', error);
       toast({
         title: "Order Failed",
         description: "An unexpected error occurred. Please try again.",
@@ -115,7 +117,24 @@ export default function Checkout() {
     }
   };
 
-  const estimatedShipping = 120000;
+  const handlePaymentSuccess = async (paymentId: string) => {
+    toast({
+      title: "Payment Successful!",
+      description: "Your order has been confirmed. Our team will contact you within 24 hours.",
+    });
+    await clearCart();
+    setTimeout(() => setLocation("/dashboard"), 2000);
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
+  };
+
+  const estimatedShipping = 5000; // Reduced for testing (₹50 instead of ₹1200)
   const total = cartTotal + estimatedShipping;
 
   return (
@@ -143,9 +162,16 @@ export default function Checkout() {
 
             <div className={`flex flex-col items-center gap-2 bg-background px-4 ${step >= 3 ? 'text-primary' : 'text-muted-foreground'}`}>
               <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'}`}>
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-medium">Payment</span>
+            </div>
+
+            <div className={`flex flex-col items-center gap-2 bg-background px-4 ${step >= 4 ? 'text-primary' : 'text-muted-foreground'}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step >= 4 ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'}`}>
                 <CheckCircle2 className="w-5 h-5" />
               </div>
-              <span className="text-sm font-medium">Review</span>
+              <span className="text-sm font-medium">Complete</span>
             </div>
           </div>
         </div>
@@ -156,7 +182,8 @@ export default function Checkout() {
               <CardTitle className="font-serif text-2xl text-primary">
                 {step === 1 && "Business Details"}
                 {step === 2 && "Shipping & Logistics"}
-                {step === 3 && "Review & Submit"}
+                {step === 3 && "Payment"}
+                {step === 4 && "Order Complete"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -285,8 +312,8 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* Step 3: Review */}
-                {step === 3 && (
+                {/* Step 3: Payment */}
+                {step === 3 && orderId && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="bg-secondary/30 p-4 rounded-lg space-y-4">
                       <h4 className="font-bold text-primary">Order Summary</h4>
@@ -310,17 +337,21 @@ export default function Checkout() {
                         <span>Total</span>
                         <span className="text-primary">{formatPrice(total)}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-4">
-                        By submitting this inquiry, you are requesting a formal proforma invoice. 
-                        No payment is taken at this stage. Our team will verify availability and shipping costs.
-                      </p>
                     </div>
+
+                    {/* Razorpay Payment Component */}
+                    <RazorpayPayment
+                      amount={total}
+                      orderId={orderId}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                    />
                     
                     <div className="space-y-2">
                       <div className="flex items-start space-x-2">
                         <input type="checkbox" id="terms" className="mt-1" required />
                         <label htmlFor="terms" className="text-sm text-muted-foreground">
-                          I agree to the <Link href="/terms"><a className="text-accent underline">Terms & Conditions</a></Link> and understand this is a wholesale trade inquiry.
+                          I agree to the <Link href="/terms"><a className="text-accent underline">Terms & Conditions</a></Link> and authorize the payment.
                         </label>
                       </div>
                     </div>
@@ -337,19 +368,19 @@ export default function Checkout() {
                     <div />
                   )}
                   
-                  {step < 3 ? (
+                  {step < 2 ? (
                     <Button type="button" onClick={handleNext} className="bg-primary text-primary-foreground hover:bg-primary/90">
                       Next Step
                     </Button>
-                  ) : (
+                  ) : step === 2 ? (
                     <Button 
                       type="submit" 
-                      className="bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto"
+                      className="bg-accent text-accent-foreground hover:bg-accent/90"
                       disabled={submitting}
                     >
-                      {submitting ? "Placing Order..." : "Place Order"}
+                      {submitting ? "Creating Order..." : "Create Order & Proceed to Payment"}
                     </Button>
-                  )}
+                  ) : null}
                 </div>
 
               </form>

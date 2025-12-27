@@ -1,22 +1,9 @@
 import { Layout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { ContactForm } from "@/components/ContactForm";
 
 export default function Contact() {
-  const { toast } = useToast();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Message Sent",
-      description: "We'll get back to you shortly.",
-    });
-  };
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
@@ -48,8 +35,8 @@ export default function Contact() {
                   <div>
                     <h4 className="font-bold mb-1">Phone</h4>
                     <p className="text-sm opacity-80">
-                      +91 22 1234 5678 (Sales)<br />
-                      +91 22 8765 4321 (Support)
+                      +91 22 1234 5678<br />
+                      +91 98765 43210
                     </p>
                   </div>
                 </div>
@@ -58,8 +45,8 @@ export default function Contact() {
                   <div>
                     <h4 className="font-bold mb-1">Email</h4>
                     <p className="text-sm opacity-80">
-                      sales@terratrade.com<br />
-                      info@terratrade.com
+                      sales@kinsa.com<br />
+                      info@kinsa.com
                     </p>
                   </div>
                 </div>
@@ -76,38 +63,9 @@ export default function Contact() {
             </Card>
           </div>
 
-          {/* Form */}
+          {/* Contact Form */}
           <div className="lg:col-span-2">
-             <Card>
-               <CardContent className="p-8">
-                 <form onSubmit={handleSubmit} className="space-y-6">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="space-y-2">
-                       <label className="text-sm font-medium">Name</label>
-                       <Input placeholder="Your Name" required />
-                     </div>
-                     <div className="space-y-2">
-                       <label className="text-sm font-medium">Email</label>
-                       <Input type="email" placeholder="email@company.com" required />
-                     </div>
-                   </div>
-                   
-                   <div className="space-y-2">
-                     <label className="text-sm font-medium">Subject</label>
-                     <Input placeholder="Product Inquiry: ..." required />
-                   </div>
-
-                   <div className="space-y-2">
-                     <label className="text-sm font-medium">Message</label>
-                     <Textarea placeholder="Tell us about your requirements (Quantity, Destination, Grade)..." className="min-h-[150px]" required />
-                   </div>
-
-                   <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 w-full md:w-auto">
-                     Send Message
-                   </Button>
-                 </form>
-               </CardContent>
-             </Card>
+            <ContactForm />
           </div>
         </div>
 

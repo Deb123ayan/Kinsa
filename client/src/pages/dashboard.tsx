@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Truck, Clock, FileText, ShoppingCart, X } from "lucide-react";
+import { Package, Truck, Clock, FileText, ShoppingCart, X, MessageCircle } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { ProductCard } from "@/components/product-card";
+import { ContactForm } from "@/components/ContactForm";
+import { HelpAssistant } from "@/components/help-assistant";
 import { motion } from "framer-motion";
 import { formatPrice } from "@/lib/currency";
 import { getUserOrders, cancelOrder, type Order } from "@/services/orders";
@@ -39,7 +41,8 @@ export default function Dashboard() {
         setOrders(ordersData);
       } catch (error) {
         console.error('Failed to load orders:', error);
-        setOrdersError('Failed to load order history');
+        // Don't show error, just treat as no orders
+        setOrders([]);
       } finally {
         setOrdersLoading(false);
       }
@@ -78,7 +81,8 @@ export default function Dashboard() {
       setOrders(ordersData);
     } catch (error) {
       console.error('Failed to load orders:', error);
-      setOrdersError('Failed to load order history');
+      // Don't show error, just treat as no orders
+      setOrders([]);
     } finally {
       setOrdersLoading(false);
     }
@@ -141,14 +145,17 @@ export default function Dashboard() {
   }
 
   // Calculate stats from real orders
-  const activeOrders = orders.filter((order: Order) => order.status === 'processing' || order.status === 'pending').length;
+  const activeOrders = orders.filter((order: Order) => 
+    order.status === 'processing' || order.status === 'pending' || order.status === 'in transit'
+  ).length;
   const totalVolume = orders.reduce((sum: number, order: Order) => {
     return sum + order.items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0);
   }, 0);
   const pendingOrders = orders.filter((order: Order) => order.status === 'pending').length;
+  const inTransitOrders = orders.filter((order: Order) => order.status === 'in transit').length;
 
   const statCards = [
-    { icon: Truck, label: "Active Orders", value: activeOrders.toString(), sub: `${pendingOrders} pending, ${activeOrders - pendingOrders} processing` },
+    { icon: Truck, label: "Active Orders", value: activeOrders.toString(), sub: `${pendingOrders} pending, ${inTransitOrders} in transit` },
     { icon: Clock, label: "Total Orders", value: orders.length.toString(), sub: "All time" },
     { icon: Package, label: "Total Volume", value: `${totalVolume} MT`, sub: "Across all orders" },
   ];
@@ -227,12 +234,22 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="products" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="products">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Browse Products ({cart.length})
+                <TabsList className="grid w-full grid-cols-3 mb-6 overflow-x-auto">
+                  <TabsTrigger value="products" className="text-xs sm:text-sm">
+                    <ShoppingCart className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Browse Products</span>
+                    <span className="sm:hidden">Products</span>
+                    <span className="ml-1">({cart.length})</span>
                   </TabsTrigger>
-                  <TabsTrigger value="orders">Order History</TabsTrigger>
+                  <TabsTrigger value="orders" className="text-xs sm:text-sm">
+                    <span className="hidden sm:inline">Order History</span>
+                    <span className="sm:hidden">Orders</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="contact" className="text-xs sm:text-sm">
+                    <MessageCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Contact Support</span>
+                    <span className="sm:hidden">Contact</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Products Tab */}
@@ -278,15 +295,21 @@ export default function Dashboard() {
                   {cart.length > 0 && (
                     <div className="bg-accent/10 border border-accent/20 rounded-lg p-6 space-y-4">
                       <h4 className="font-bold text-primary text-lg">Current Inquiry Cart</h4>
-                      <div className="space-y-3">
+                      <div className="space-y-3 max-h-[400px] overflow-y-auto">
                         {cart.map((item) => (
-                          <div key={item.product.id} className="flex justify-between items-center p-3 bg-white rounded-md border border-border">
-                            <div>
-                              <p className="font-medium text-primary">{item.product.name}</p>
-                              <p className="text-sm text-muted-foreground">Quantity: {item.quantity} {item.product.unit}</p>
+                          <div key={item.product.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-white rounded-md border border-border gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-primary truncate" title={item.product.name}>
+                                {item.product.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.quantity} {item.product.unit} × {formatPrice(item.product.price)}
+                              </p>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
+                            <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                              <span className="font-bold text-primary">
+                                {formatPrice(item.product.price * item.quantity)}
+                              </span>
                               <Button 
                                 variant="outline" 
                                 size="sm"
@@ -312,33 +335,21 @@ export default function Dashboard() {
                 </TabsContent>
 
                 {/* Order History Tab */}
-                <TabsContent value="orders">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Items</TableHead>
-                        <TableHead>Total Value</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ordersError ? (
+                <TabsContent value="orders" className="overflow-x-auto">
+                  <div className="min-w-[800px]">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            <p>{ordersError}</p>
-                            <Button 
-                              variant="outline" 
-                              onClick={retryLoadOrders} 
-                              className="mt-2"
-                            >
-                              Retry
-                            </Button>
-                          </TableCell>
+                          <TableHead className="min-w-[100px]">Order ID</TableHead>
+                          <TableHead className="min-w-[100px]">Date</TableHead>
+                          <TableHead className="min-w-[200px]">Items</TableHead>
+                          <TableHead className="min-w-[120px]">Total Value</TableHead>
+                          <TableHead className="min-w-[100px]">Status</TableHead>
+                          <TableHead className="text-right min-w-[150px]">Actions</TableHead>
                         </TableRow>
-                      ) : ordersLoading ? (
+                      </TableHeader>
+                      <TableBody>
+                      {ordersLoading ? (
                         Array.from({ length: 3 }).map((_, idx) => (
                           <TableRow key={idx}>
                             <TableCell><div className="h-4 bg-secondary/20 rounded animate-pulse"></div></TableCell>
@@ -359,44 +370,60 @@ export default function Dashboard() {
                           >
                             <TableCell className="font-medium">ORD-{order.id}</TableCell>
                             <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                            <TableCell>
+                            <TableCell className="min-w-[200px]">
                               {order.items.length > 0 ? (
-                                <div>
-                                  {order.items[0].product.name} ({order.items[0].quantity} MT)
+                                <div className="space-y-1">
+                                  <div className="font-medium text-sm truncate max-w-[180px]" title={order.items[0].product.name}>
+                                    {order.items[0].product.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {order.items[0].quantity} MT
+                                  </div>
                                   {order.items.length > 1 && (
-                                    <span className="text-muted-foreground"> +{order.items.length - 1} more</span>
+                                    <div className="text-xs text-muted-foreground">
+                                      +{order.items.length - 1} more items
+                                    </div>
                                   )}
                                 </div>
                               ) : (
-                                'No items'
+                                <span className="text-muted-foreground text-sm">No items</span>
                               )}
                             </TableCell>
                             <TableCell className="font-medium text-primary">
-                              {formatPrice(order.total_amount + order.shipping_cost)}
+                              {formatPrice(order.total_amount || 0)}
                             </TableCell>
                             <TableCell>
                               <Badge variant={
                                 order.status === 'delivered' ? 'default' :
+                                order.status === 'in transit' ? 'default' :
                                 order.status === 'processing' ? 'secondary' :
                                 order.status === 'cancelled' ? 'destructive' :
                                 'outline'
+                              } className={
+                                order.status === 'in transit' ? 'bg-green-100 text-green-800 border-green-200' :
+                                order.status === 'delivered' ? 'bg-green-100 text-green-800 border-green-200' :
+                                ''
                               }>
-                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                {(order.status?.charAt(0).toUpperCase() || '') + (order.status?.slice(1) || '') || 'Unknown'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex gap-2 justify-end">
-                                <Button variant="ghost" size="sm">
-                                  <FileText className="h-4 w-4 mr-1" /> Details
+                            <TableCell className="text-right min-w-[150px]">
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
+                                <Button variant="ghost" size="sm" className="text-xs">
+                                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
+                                  <span className="hidden sm:inline">Details</span>
+                                  <span className="sm:hidden">View</span>
                                 </Button>
                                 {order.status === 'pending' && (
                                   <Button 
                                     variant="ghost" 
                                     size="sm" 
                                     onClick={() => handleCancelOrder(order.id)}
-                                    className="text-destructive hover:text-destructive"
+                                    className="text-destructive hover:text-destructive text-xs"
                                   >
-                                    <X className="h-4 w-4 mr-1" /> Cancel
+                                    <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
+                                    <span className="hidden sm:inline">Cancel</span>
+                                    <span className="sm:hidden">×</span>
                                   </Button>
                                 )}
                               </div>
@@ -406,18 +433,95 @@ export default function Dashboard() {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                            No orders found. <Link href="/catalog"><Button variant="link" className="p-0 h-auto">Browse products</Button></Link> to get started.
+                            No orders yet. <Link href="/catalog"><Button variant="link" className="p-0 h-auto">Browse products</Button></Link> to get started.
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
+                  </div>
+                </TabsContent>
+
+                {/* Contact Support Tab */}
+                <TabsContent value="contact" id="contact-section" className="overflow-x-hidden">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+                    {/* Contact Form */}
+                    <div className="order-2 xl:order-1">
+                      <ContactForm />
+                    </div>
+                    
+                    {/* Support Information */}
+                    <div className="space-y-4 lg:space-y-6 order-1 xl:order-2">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Get in Touch</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <h4 className="font-medium text-primary mb-2">Sales Inquiries</h4>
+                            <p className="text-sm text-muted-foreground mb-1">
+                              For product inquiries, quotations, and bulk orders.
+                            </p>
+                            <p className="text-sm font-medium break-all">sales@kinsa.com</p>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-primary mb-2">Order Support</h4>
+                            <p className="text-sm text-muted-foreground mb-1">
+                              For order tracking, modifications, and shipping updates.
+                            </p>
+                            <p className="text-sm font-medium break-all">orders@kinsa.com</p>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-primary mb-2">Technical Support</h4>
+                            <p className="text-sm text-muted-foreground mb-1">
+                              For platform issues and account assistance.
+                            </p>
+                            <p className="text-sm font-medium break-all">support@kinsa.com</p>
+                          </div>
+                          
+                          <div className="border-t pt-4">
+                            <h4 className="font-medium text-primary mb-2">Business Hours</h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              Monday - Friday: 9:00 AM - 6:00 PM IST<br />
+                              Saturday: 9:00 AM - 2:00 PM IST<br />
+                              Sunday: Closed
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Quick Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <Button variant="outline" className="w-full justify-start text-sm">
+                            <Package className="mr-2 h-4 w-4 shrink-0" />
+                            <span className="truncate">Request Product Samples</span>
+                          </Button>
+                          <Button variant="outline" className="w-full justify-start text-sm">
+                            <FileText className="mr-2 h-4 w-4 shrink-0" />
+                            <span className="truncate">Download Product Catalog</span>
+                          </Button>
+                          <Button variant="outline" className="w-full justify-start text-sm">
+                            <Truck className="mr-2 h-4 w-4 shrink-0" />
+                            <span className="truncate">Schedule Warehouse Visit</span>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
         </motion.div>
       </div>
+      
+      {/* Help Assistant */}
+      <HelpAssistant />
     </Layout>
   );
 }

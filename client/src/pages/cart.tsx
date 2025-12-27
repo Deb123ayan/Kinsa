@@ -61,7 +61,7 @@ export default function Cart() {
     setLocation("/checkout");
   };
 
-  const estimatedShipping = 120000;
+  const estimatedShipping = 5000; // Reduced for testing (₹50 instead of ₹1200)
   const total = cartTotal + estimatedShipping;
 
   return (

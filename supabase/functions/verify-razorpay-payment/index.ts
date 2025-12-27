@@ -105,7 +105,6 @@ serve(async (req: Request) => {
         razorpay_payment_id,
         razorpay_signature,
         status: "paid",
-        order_id: order_id ?? null,
       })
       .eq("razorpay_order_id", razorpay_order_id)
       .eq("user_email", user.email);
@@ -115,16 +114,69 @@ serve(async (req: Request) => {
       throw new Error("Payment update failed");
     }
 
-    // ✅ Optional: update orders table (NOT `order`)
-    if (order_id) {
-      await supabase
-        .from("orders") // ✅ renamed
-        .update({
-          payment: "paid",
-          status: "confirmed",
-        })
-        .eq("id", order_id)
-        .eq("email", user.email);
+    // ✅ Create the actual order after successful payment
+    try {
+      // Get the payment record to extract order data
+      const { data: payment, error: fetchError } = await supabase
+        .from("payments")
+        .select("notes")
+        .eq("razorpay_order_id", razorpay_order_id)
+        .eq("user_email", user.email)
+        .single();
+
+      if (fetchError || !payment?.notes) {
+        console.error("Could not fetch payment notes for order creation:", fetchError);
+      } else {
+        console.log("Payment notes found:", payment.notes);
+        const orderData = payment.notes;
+        
+        const totalAmount = orderData.items?.reduce((sum: number, item: any) => 
+          sum + (item.product.price * item.quantity), 0
+        ) + (orderData.shippingCost || 0);
+
+        const orderRecord = {
+          name: `${orderData.firstName} ${orderData.lastName}`,
+          email: orderData.email,
+          products: JSON.stringify(orderData.items?.map((item: any) => ({
+            id: item.product.id,
+            name: item.product.name,
+            price: item.product.price,
+            unit: item.product.unit,
+            quantity: item.quantity
+          })) || []),
+          number: orderData.phone,
+          'import export code': orderData.iecTaxId || null,
+          'shipping address': `${orderData.shippingAddress}, ${orderData.city}, ${orderData.country}`,
+          port: orderData.city,
+          country: orderData.country,
+          status: 'confirmed',
+          incoterms: orderData.incoterms,
+          instructions: orderData.specialInstructions || null,
+          total_amount: totalAmount,
+          payment: 'paid'
+        };
+
+        console.log("Creating order with data:", orderRecord);
+
+        const { data: newOrder, error: orderError } = await supabase
+          .from("order")
+          .insert([orderRecord])
+          .select()
+          .single();
+
+        if (!orderError && newOrder) {
+          // Update payment record with the new order ID
+          await supabase
+            .from("payments")
+            .update({ order_id: newOrder.id })
+            .eq("razorpay_order_id", razorpay_order_id)
+            .eq("user_email", user.email);
+        }
+      }
+    } catch (orderCreationError) {
+      console.error("Order creation after payment failed:", orderCreationError);
+      // Don't fail the payment verification if order creation fails
+      // The payment is still successful
     }
 
     return new Response(

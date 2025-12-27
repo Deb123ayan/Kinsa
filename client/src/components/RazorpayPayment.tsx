@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CreditCard, Shield, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/auth-context';
-import { createRazorpayOrder, verifyRazorpayPayment, getRazorpayOptions } from '@/services/payment';
-import { formatPrice } from '@/lib/currency';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, Shield, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
+import {
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  getRazorpayOptions,
+} from "@/services/payment";
+import { formatPrice } from "@/lib/currency";
 
 interface RazorpayPaymentProps {
   amount: number;
   orderId?: number;
+  orderData?: any;
+  cartItems?: any[];
+  shippingCost?: number;
   onSuccess?: (paymentId: string) => void;
   onError?: (error: string) => void;
   disabled?: boolean;
@@ -22,14 +29,18 @@ declare global {
   }
 }
 
-export function RazorpayPayment({ 
-  amount, 
-  orderId, 
-  onSuccess, 
-  onError, 
-  disabled = false 
+export function RazorpayPayment({
+  amount,
+  orderId,
+  orderData,
+  cartItems,
+  shippingCost,
+  onSuccess,
+  onError,
+  disabled = false,
 }: RazorpayPaymentProps) {
   const [loading, setLoading] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -40,8 +51,8 @@ export function RazorpayPayment({
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -59,8 +70,8 @@ export function RazorpayPayment({
     }
 
     // Debug: Check current auth state
-    console.log('Current user:', user);
-    console.log('User email:', user.email);
+    console.log("Current user:", user);
+    console.log("User email:", user.email);
 
     setLoading(true);
 
@@ -68,33 +79,64 @@ export function RazorpayPayment({
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        throw new Error('Failed to load Razorpay SDK');
+        throw new Error("Failed to load Razorpay SDK");
       }
 
-      // Create Razorpay order
+      // Create Razorpay order with complete order data
       const orderResult = await createRazorpayOrder({
         amount,
-        currency: 'INR',
+        currency: "INR",
         receipt: `receipt_${Date.now()}`,
         notes: {
-          order_id: orderId?.toString() || '',
+          // Store complete order data for later order creation
+          firstName: orderData?.firstName,
+          lastName: orderData?.lastName,
+          companyName: orderData?.companyName,
+          email: orderData?.email || user.email,
+          phone: orderData?.phone,
+          iecTaxId: orderData?.iecTaxId,
+          shippingAddress: orderData?.shippingAddress,
+          city: orderData?.city,
+          country: orderData?.country,
+          incoterms: orderData?.incoterms,
+          specialInstructions: orderData?.specialInstructions,
+          items: cartItems || [],
+          shippingCost: shippingCost || 0,
+          total_amount: amount,
           user_email: user.email,
         },
         orderId,
       });
 
       if (!orderResult.success || !orderResult.order || !orderResult.key_id) {
-        throw new Error(orderResult.error || 'Failed to create payment order');
+        throw new Error(orderResult.error || "Failed to create payment order");
       }
+
+      const createdOrder = orderResult.order;
+
+      // Store the created order ID for later use
+      setCreatedOrderId(createdOrder.id);
 
       // Configure Razorpay options
       const options = {
-        ...getRazorpayOptions(orderResult.order, orderResult.key_id, user.email),
+        ...getRazorpayOptions(createdOrder, orderResult.key_id, user.email),
         handler: async (response: any) => {
           try {
+            console.log("=== RAZORPAY RESPONSE ===");
+            console.log("Razorpay response:", response);
+            console.log("Original order ID from creation:", createdOrder.id);
+            console.log(
+              "Razorpay order ID from response:",
+              response.razorpay_order_id
+            );
+
+            // In test mode, use our original order ID instead of Razorpay's response
+            const orderIdToUse = createdOrder.id;
+            console.log("Using order ID for verification:", orderIdToUse);
+
             // Verify payment
             const verificationResult = await verifyRazorpayPayment({
-              razorpay_order_id: response.razorpay_order_id,
+              razorpay_order_id: orderIdToUse, // Use our original order ID
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               order_id: orderId,
@@ -107,16 +149,20 @@ export function RazorpayPayment({
               });
               onSuccess?.(response.razorpay_payment_id);
             } else {
-              throw new Error(verificationResult.error || 'Payment verification failed');
+              throw new Error(
+                verificationResult.error || "Payment verification failed"
+              );
             }
           } catch (error) {
-            console.error('Payment verification error:', error);
+            console.error("Payment verification error:", error);
             toast({
               title: "Payment Verification Failed",
               description: "Please contact support if amount was deducted.",
               variant: "destructive",
             });
-            onError?.(error instanceof Error ? error.message : 'Verification failed');
+            onError?.(
+              error instanceof Error ? error.message : "Verification failed"
+            );
           }
         },
         modal: {
@@ -130,7 +176,9 @@ export function RazorpayPayment({
           },
           // Add test mode handler for international card issues
           onhidden: () => {
-            console.log('Payment modal hidden - checking for test mode completion');
+            console.log(
+              "Payment modal hidden - checking for test mode completion"
+            );
           },
         },
       };
@@ -138,15 +186,15 @@ export function RazorpayPayment({
       // Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error("Payment error:", error);
       toast({
         title: "Payment Failed",
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
-      onError?.(error instanceof Error ? error.message : 'Payment failed');
+      onError?.(error instanceof Error ? error.message : "Payment failed");
     } finally {
       setLoading(false);
     }
@@ -183,7 +231,7 @@ export function RazorpayPayment({
           <p>• Test mode - No real money will be charged</p>
         </div>
 
-        <Button 
+        <Button
           onClick={handlePayment}
           disabled={disabled || loading || amount <= 0}
           className="w-full"

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import {
   HelpCircle,
   X,
@@ -13,30 +14,213 @@ import {
   ShoppingCart,
   ArrowLeft,
   MessageSquare,
+  Send,
+  Bot,
+  CheckCircle,
+  Clock,
+  Truck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/currency";
+import { OrderService, OrderWithPayment } from "@/services/orders";
+import { ChatbotService, ChatMessage, ChatContext } from "@/services/chatbot";
 
-type ViewType = "greeting" | "account" | "cart" | "orders";
+type ViewType = "greeting" | "account" | "cart" | "orders" | "chat";
 
 export function HelpAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>("greeting");
   const [showNotification, setShowNotification] = useState(true);
+  const [orders, setOrders] = useState<OrderWithPayment[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
 
   const { user, getUserDisplayName } = useAuth();
   const { cart, cartTotal, cartCount } = useCart();
 
   // Hide notification after 5 seconds
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setShowNotification(false);
     }, 5000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Fetch orders when component mounts or user changes
+  useEffect(() => {
+    if (user?.email) {
+      fetchUserOrders();
+    }
+  }, [user?.email]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  const fetchUserOrders = async () => {
+    if (!user?.email) {
+      console.log("No user email available for fetching orders");
+      return;
+    }
+
+    console.log("Fetching orders for user:", user.email);
+    setLoadingOrders(true);
+    try {
+      // Use OrderService.getUserOrders directly to get OrderWithPayment[]
+      const userOrders = await OrderService.getUserOrders(user.email);
+      console.log("Fetched orders:", userOrders);
+
+      setOrders(userOrders);
+      console.log("Orders set in state:", userOrders);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  // Get only confirmed orders for chatbot context
+  const getConfirmedOrdersForChat = (): OrderWithPayment[] => {
+    return orders.filter(
+      (order) =>
+        // Order must have payment = 'paid' in the order table
+        order.payment === "paid" &&
+        // And either have confirmed status or paid payments
+        (order.status === "confirmed" ||
+          order.payments?.some((p) => p.status === "paid"))
+    );
+  };
+
+  const getChatContext = (): ChatContext => ({
+    userEmail: user?.email || "",
+    userName: getUserDisplayName() || "there",
+    orders: getConfirmedOrdersForChat(), // Only pass confirmed orders to chatbot
+    currentTopic: currentView,
+    cart: cart,
+    cartTotal: cartTotal,
+    cartCount: cartCount,
+  });
+
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: "user",
+      content: chatInput.trim(),
+      timestamp: new Date(),
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+    setChatInput("");
+    setIsTyping(true);
+
+    // Simulate typing delay
+    setTimeout(() => {
+      const context = getChatContext();
+      const response = ChatbotService.generateResponse(
+        userMessage.content,
+        context
+      );
+
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "assistant",
+        content: response.content,
+        timestamp: new Date(),
+        context: response.data,
+      };
+
+      setChatMessages((prev) => [...prev, assistantMessage]);
+      setIsTyping(false);
+
+      // Handle actions
+      if (response.action) {
+        handleChatAction(response.action, response.data);
+      }
+    }, 1000 + Math.random() * 1000);
+  };
+
+  const handleChatAction = (action: string, data?: any) => {
+    switch (action) {
+      case "show_orders":
+        setCurrentView("orders");
+        // Refresh orders when showing orders view
+        fetchUserOrders();
+        break;
+      case "show_account":
+        setCurrentView("account");
+        break;
+      case "show_cart":
+        setCurrentView("cart");
+        break;
+      case "show_checkout":
+        // Add a follow-up message about checkout
+        setTimeout(() => {
+          const followUp: ChatMessage = {
+            id: Date.now().toString(),
+            type: "assistant",
+            content:
+              "Would you like me to guide you to the checkout page, or do you need help with anything else first?",
+            timestamp: new Date(),
+          };
+          setChatMessages((prev) => [...prev, followUp]);
+        }, 500);
+        break;
+      case "suggest_products":
+        // Add a follow-up message
+        setTimeout(() => {
+          const followUp: ChatMessage = {
+            id: Date.now().toString(),
+            type: "assistant",
+            content:
+              "Would you like me to show you our product catalog or help you with something else?",
+            timestamp: new Date(),
+          };
+          setChatMessages((prev) => [...prev, followUp]);
+        }, 500);
+        break;
+      case "show_contact_options":
+        // Add contact options message
+        setTimeout(() => {
+          const followUp: ChatMessage = {
+            id: Date.now().toString(),
+            type: "assistant",
+            content:
+              "You can reach us at:\n• WhatsApp: +91 8001135771\n• Email: support@kinsa-global.com\n• Or use our contact form\n\nHow would you prefer to get in touch?",
+            timestamp: new Date(),
+          };
+          setChatMessages((prev) => [...prev, followUp]);
+        }, 500);
+        break;
+      case "show_menu":
+        // Keep in chat but could suggest main menu
+        break;
+    }
+  };
+
+  const startChat = () => {
+    setCurrentView("chat");
+    if (chatMessages.length === 0) {
+      const welcomeMessage: ChatMessage = {
+        id: "welcome",
+        type: "assistant",
+        content: `Hi ${
+          getUserDisplayName() || "there"
+        }! I'm ANYA, your personal assistant. I can help you with your orders, account information, and answer any questions you might have. What would you like to know?`,
+        timestamp: new Date(),
+      };
+      setChatMessages([welcomeMessage]);
+    }
+  };
 
   const resetToGreeting = () => {
     setCurrentView("greeting");
@@ -66,11 +250,27 @@ export function HelpAssistant() {
         <div className="text-2xl">👋</div>
         <h3 className="font-semibold text-primary">Hi! How can I help you?</h3>
         <p className="text-sm text-muted-foreground">
-          Choose an option below to get started
+          Choose an option below or start a conversation
         </p>
       </div>
 
       <div className="space-y-3">
+        <Button
+          variant="outline"
+          className="w-full justify-start h-auto p-4 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/20"
+          onClick={startChat}
+        >
+          <div className="flex items-center gap-3">
+            <Bot className="h-5 w-5 text-accent" />
+            <div className="text-left">
+              <div className="font-medium">Chat with ANYA</div>
+              <div className="text-xs text-muted-foreground">
+                Ask me anything about your orders or account
+              </div>
+            </div>
+          </div>
+        </Button>
+
         <Button
           variant="outline"
           className="w-full justify-start h-auto p-4"
@@ -115,14 +315,30 @@ export function HelpAssistant() {
         <Button
           variant="outline"
           className="w-full justify-start h-auto p-4"
-          onClick={() => setCurrentView("orders")}
+          onClick={() => {
+            setCurrentView("orders");
+            fetchUserOrders(); // Refresh orders when clicking the button
+          }}
         >
           <div className="flex items-center gap-3">
             <Package className="h-5 w-5 text-accent" />
-            <div className="text-left">
-              <div className="font-medium">Order Details</div>
+            <div className="text-left flex-1">
+              <div className="font-medium flex items-center gap-2">
+                Order Details
+                {orders.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {orders.length} orders
+                  </Badge>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground">
-                Track your orders and shipments
+                {loadingOrders
+                  ? "Loading orders..."
+                  : orders.length > 0
+                  ? `${
+                      orders.filter((o) => o.payment === "paid").length
+                    } confirmed`
+                  : "No orders yet"}
               </div>
             </div>
           </div>
@@ -316,57 +532,253 @@ export function HelpAssistant() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h3 className="font-semibold text-primary">Order Details</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchUserOrders}
+          disabled={loadingOrders}
+          className="ml-auto"
+        >
+          {loadingOrders ? "Refreshing..." : "Refresh"}
+        </Button>
       </div>
 
-      <div className="text-center py-8 space-y-3">
-        <Package className="h-12 w-12 text-muted-foreground mx-auto" />
-        <div>
-          <p className="font-medium text-muted-foreground">No orders yet</p>
+      {loadingOrders ? (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-2"></div>
           <p className="text-sm text-muted-foreground">
-            You haven't placed any orders yet. Start by adding items to your
-            cart!
+            Loading your orders...
           </p>
         </div>
-        <div className="space-y-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              setIsOpen(false);
-              setLocation("/catalog");
-            }}
-          >
-            Browse Products
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentView("cart")}
-          >
-            View Cart
-          </Button>
+      ) : orders.length === 0 ? (
+        <div className="text-center py-8 space-y-3">
+          <Package className="h-12 w-12 text-muted-foreground mx-auto" />
+          <div>
+            <p className="font-medium text-muted-foreground">No orders yet</p>
+            <p className="text-sm text-muted-foreground">
+              You haven't placed any orders yet. Start by adding items to your
+              cart!
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setIsOpen(false);
+                setLocation("/catalog");
+              }}
+            >
+              Browse Products
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentView("cart")}
+            >
+              View Cart
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Your Orders</span>
+            <Badge variant="secondary">{orders.length} orders</Badge>
+          </div>
+
+          <ScrollArea className="h-80">
+            <div className="space-y-3">
+              {orders.map((order) => {
+                const isConfirmed = order.payments?.some(
+                  (p) => p.status === "paid"
+                );
+                const status = OrderService.getOrderStatusText(order);
+                const statusColor = OrderService.getOrderStatusColor(
+                  order.status
+                );
+
+                return (
+                  <div
+                    key={order.id}
+                    className="border rounded-lg p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-sm">
+                            Order #{order.id}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <div
+                              className={`w-2 h-2 rounded-full ${statusColor}`}
+                            ></div>
+                            <span className="text-xs text-muted-foreground">
+                              {status}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {OrderService.formatOrderProducts(order.products)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {isConfirmed && (
+                          <CheckCircle className="h-4 w-4 text-green-500 mb-1" />
+                        )}
+                        <p className="font-medium text-sm">
+                          {order.total_amount
+                            ? `₹${order.total_amount.toLocaleString()}`
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Show payment status from order table for confirmed orders */}
+                    <div className="border-t pt-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        Payment Status:
+                      </p>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="capitalize font-medium text-green-600">
+                          {order.payment || "Paid"}
+                        </span>
+                        <span>
+                          ₹{order.total_amount?.toLocaleString() || "N/A"}
+                        </span>
+                      </div>
+
+                      {/* Show additional payment details if available */}
+                      {order.payments && order.payments.length > 0 && (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          Payment ID:{" "}
+                          {order.payments[0]?.razorpay_payment_id || "N/A"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+
+          <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+            <h4 className="font-medium text-sm">Order Status Guide</h4>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span>Payment Pending - Awaiting payment confirmation</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>Processing - Order being prepared for shipment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <span>In Transit - Order shipped and on the way</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Delivered - Order successfully delivered</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+
+  const renderChat = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="space-y-4 h-full flex flex-col"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Button variant="ghost" size="sm" onClick={resetToGreeting}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-accent" />
+          <h3 className="font-semibold text-primary">Chat with ANYA</h3>
         </div>
       </div>
 
-      <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-        <h4 className="font-medium text-sm">Order Status Guide</h4>
-        <div className="space-y-1 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <span>Pending - Order received, awaiting processing</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span>Processing - Order being prepared for shipment</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>In Transit - Order shipped and on the way</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span>Delivered - Order successfully delivered</span>
-          </div>
+      <ScrollArea className="flex-1 h-64 pr-4">
+        <div className="space-y-4">
+          {chatMessages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.type === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.type === "user"
+                    ? "bg-accent text-white"
+                    : "bg-muted text-foreground"
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-muted text-foreground rounded-lg p-3">
+                <div className="flex items-center gap-1">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-accent rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-accent rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-accent rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground ml-2">
+                    ANYA is typing...
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
         </div>
+      </ScrollArea>
+
+      <form onSubmit={handleChatSubmit} className="flex gap-2">
+        <Input
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          placeholder="Ask me about your orders, account, or anything else..."
+          className="flex-1"
+          disabled={isTyping}
+        />
+        <Button
+          type="submit"
+          size="icon"
+          disabled={!chatInput.trim() || isTyping}
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
+
+      <div className="text-xs text-muted-foreground text-center">
+        Try asking: "Show my orders", "What's my account info?", or "Help me
+        track order #123"
       </div>
     </motion.div>
   );
@@ -379,6 +791,8 @@ export function HelpAssistant() {
         return renderCartDetails();
       case "orders":
         return renderOrderDetails();
+      case "chat":
+        return renderChat();
       default:
         return renderGreeting();
     }
@@ -466,60 +880,68 @@ export function HelpAssistant() {
                 </CardHeader>
 
                 <CardContent>
-                  <div className="min-h-[300px]">{renderCurrentView()}</div>
+                  <div
+                    className={`${
+                      currentView === "chat" ? "h-96" : "min-h-[300px]"
+                    }`}
+                  >
+                    {renderCurrentView()}
+                  </div>
 
-                  {/* Contact Support - Show on all views */}
-                  <div className="border-t pt-4 mt-4">
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Need more help? Contact our support team.
-                    </p>
-                    <div className="space-y-2">
-                      {currentView !== "greeting" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={resetToGreeting}
-                        >
-                          Main Menu
-                        </Button>
-                      )}
+                  {/* Contact Support - Show on all views except chat */}
+                  {currentView !== "chat" && (
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Need more help? Contact our support team.
+                      </p>
+                      <div className="space-y-2">
+                        {currentView !== "greeting" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={resetToGreeting}
+                          >
+                            Main Menu
+                          </Button>
+                        )}
 
-                      <div
-                        className={`grid gap-2 ${
-                          currentView === "greeting"
-                            ? "grid-cols-2"
-                            : "grid-cols-1"
-                        }`}
-                      >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
-                          onClick={() => {
-                            setIsOpen(false);
-                            openWhatsAppChat(currentView);
-                          }}
+                        <div
+                          className={`grid gap-2 ${
+                            currentView === "greeting"
+                              ? "grid-cols-2"
+                              : "grid-cols-1"
+                          }`}
                         >
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          WhatsApp
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+                            onClick={() => {
+                              setIsOpen(false);
+                              openWhatsAppChat(currentView);
+                            }}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            WhatsApp
+                          </Button>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => {
-                            setIsOpen(false);
-                            setLocation("/contact");
-                          }}
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1" />
-                          Contact Form
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setIsOpen(false);
+                              setLocation("/contact");
+                            }}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Contact Form
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

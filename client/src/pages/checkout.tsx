@@ -343,6 +343,9 @@ export default function Checkout() {
                     <RazorpayPayment
                       amount={total}
                       orderId={orderId}
+                      orderData={formData}
+                      cartItems={cart}
+                      shippingCost={estimatedShipping}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
                     />

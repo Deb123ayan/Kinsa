@@ -7,18 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, Truck, CreditCard, Building2 } from "lucide-react";
+import { CheckCircle2, Truck, CreditCard, Building2, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/currency";
 import { createOrder, type OrderData } from "@/services/orders";
 import { RazorpayPayment } from "@/components/RazorpayPayment";
+import { fetchCountries, getPopularShippingDestinations, formatCountryDisplay, type Country } from "@/services/countries";
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [popularCountries, setPopularCountries] = useState<Country[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
   const { toast } = useToast();
   const { isLoggedIn } = useAuth();
   const { cart, clearCart, cartTotal } = useCart();
@@ -44,6 +48,32 @@ export default function Checkout() {
       setLocation("/auth");
     }
   }, [isLoggedIn, setLocation]);
+
+  // Load countries data
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        setLoadingCountries(true);
+        const [allCountries, popularDest] = await Promise.all([
+          fetchCountries(),
+          getPopularShippingDestinations()
+        ]);
+        setCountries(allCountries);
+        setPopularCountries(popularDest);
+      } catch (error) {
+        console.error('Failed to load countries:', error);
+        toast({
+          title: "Warning",
+          description: "Failed to load countries list. Using fallback data.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+
+    loadCountries();
+  }, [toast]);
 
   if (!isLoggedIn) {
     return null;
@@ -275,17 +305,43 @@ export default function Checkout() {
                       </div>
                       <div className="space-y-2">
                         <Label>Country</Label>
-                        <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select destination" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="uae">United Arab Emirates</SelectItem>
-                            <SelectItem value="uk">United Kingdom</SelectItem>
-                            <SelectItem value="usa">United States</SelectItem>
-                            <SelectItem value="sg">Singapore</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {loadingCountries ? (
+                          <div className="flex items-center gap-2 p-3 border rounded-md">
+                            <Globe className="h-4 w-4 animate-spin" />
+                            <span className="text-sm text-muted-foreground">Loading countries...</span>
+                          </div>
+                        ) : (
+                          <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select destination country" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {/* Popular destinations first */}
+                              {popularCountries.length > 0 && (
+                                <>
+                                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                                    Popular Destinations
+                                  </div>
+                                  {popularCountries.map((country) => (
+                                    <SelectItem key={`popular-${country.code}`} value={country.code}>
+                                      {formatCountryDisplay(country)}
+                                    </SelectItem>
+                                  ))}
+                                  <Separator className="my-1" />
+                                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                                    All Countries
+                                  </div>
+                                </>
+                              )}
+                              {/* All countries */}
+                              {countries.map((country) => (
+                                <SelectItem key={country.code} value={country.code}>
+                                  {formatCountryDisplay(country)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-2">

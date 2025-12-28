@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearch, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { ProductCard } from "@/components/product-card";
@@ -13,6 +13,23 @@ import { useAuth } from "@/context/auth-context";
 import { Search, Filter } from "lucide-react";
 import { fetchProducts, type Product } from "@/services/products";
 
+// Debounce hook for performance optimization
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function Catalog() {
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
@@ -26,8 +43,13 @@ export default function Catalog() {
     initialCategory ? [initialCategory] : []
   );
   const [priceRange, setPriceRange] = useState([0, 3500000]);
+  const [maxPrice, setMaxPrice] = useState(3500000);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Debounced values for performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedPriceRange = useDebounce(priceRange, 500);
 
   // Load products from database
   useEffect(() => {
@@ -40,8 +62,11 @@ export default function Catalog() {
         // Update price range based on actual product prices
         if (fetchedProducts.length > 0) {
           const prices = fetchedProducts.map(p => p.price);
-          const maxPrice = Math.max(...prices);
-          setPriceRange([0, maxPrice]);
+          const calculatedMaxPrice = Math.max(...prices);
+          const roundedMaxPrice = Math.ceil(calculatedMaxPrice / 100000) * 100000; // Round up to nearest 100k
+          
+          setMaxPrice(roundedMaxPrice);
+          setPriceRange([0, roundedMaxPrice]);
         }
       } catch (error) {
         console.error('Failed to load products:', error);
@@ -58,41 +83,44 @@ export default function Catalog() {
     loadProducts();
   }, [toast]);
 
-  // Filter Logic
-  const filteredProducts = products.filter((product) => {
-    // Search Text
-    if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
-    }
-    // Category
-    if (selectedCategories.length > 0 && !selectedCategories.includes(product.category.toLowerCase())) {
-      return false;
-    }
-    // Price
-    if (product.price < priceRange[0] || product.price > priceRange[1]) {
-      return false;
-    }
-    return true;
-  });
+  // Optimized filter logic with useMemo
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      // Search Text
+      if (debouncedSearchQuery && !product.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) {
+        return false;
+      }
+      // Category
+      if (selectedCategories.length > 0 && !selectedCategories.includes(product.category.toLowerCase())) {
+        return false;
+      }
+      // Price
+      if (product.price < debouncedPriceRange[0] || product.price > debouncedPriceRange[1]) {
+        return false;
+      }
+      return true;
+    });
+  }, [products, debouncedSearchQuery, selectedCategories, debouncedPriceRange]);
 
-  const toggleCategory = (catId: string) => {
+  const toggleCategory = useCallback((catId: string) => {
     setSelectedCategories(prev => 
       prev.includes(catId) 
         ? prev.filter(c => c !== catId)
         : [...prev, catId]
     );
-  };
+  }, []);
 
-  const handleProductClick = () => {
-    if (!isLoggedIn) {
-      toast({
-        title: "Please Login",
-        description: "You need to login to view product details.",
-        variant: "destructive",
-      });
-      setLocation("/auth");
-    }
-  };
+  const handleProductClick = useCallback((productId: string) => {
+    // Allow viewing product details regardless of login status
+    // Login will be required for actions like adding to cart
+    setLocation(`/product/${productId}`);
+  }, [setLocation]);
+
+  const resetFilters = useCallback(() => {
+    setSelectedCategories([]);
+    setPriceRange([0, maxPrice]);
+    setSearchQuery("");
+  }, [maxPrice]);
 
   const SidebarFilters = () => (
     <div className="space-y-8">
@@ -119,18 +147,32 @@ export default function Catalog() {
 
       <div>
         <h3 className="font-serif font-bold text-primary mb-4">Price Range (₹)</h3>
-        <Slider 
-          defaultValue={[0, 3500000]} 
-          max={3500000} 
-          step={100000} 
-          value={priceRange}
-          onValueChange={setPriceRange}
-          className="mb-4"
-        />
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>₹{priceRange[0].toLocaleString('en-IN')}</span>
-          <span>₹{priceRange[1].toLocaleString('en-IN')}</span>
-        </div>
+        {loading ? (
+          <div className="space-y-3">
+            <div className="h-2 bg-secondary/20 rounded animate-pulse"></div>
+            <div className="flex justify-between">
+              <div className="h-4 w-16 bg-secondary/20 rounded animate-pulse"></div>
+              <div className="h-4 w-16 bg-secondary/20 rounded animate-pulse"></div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Slider 
+              value={priceRange}
+              onValueChange={setPriceRange}
+              max={maxPrice} 
+              step={Math.max(1000, Math.floor(maxPrice / 100))} 
+              className="mb-4"
+            />
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>₹{priceRange[0].toLocaleString('en-IN')}</span>
+              <span>₹{priceRange[1].toLocaleString('en-IN')}</span>
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground text-center">
+              Max: ₹{maxPrice.toLocaleString('en-IN')}
+            </div>
+          </>
+        )}
       </div>
 
       <div>
@@ -144,11 +186,7 @@ export default function Catalog() {
       <Button 
         variant="outline" 
         className="w-full"
-        onClick={() => {
-          setSelectedCategories([]);
-          setPriceRange([0, 3500000]);
-          setSearchQuery("");
-        }}
+        onClick={resetFilters}
       >
         Reset Filters
       </Button>
@@ -213,7 +251,7 @@ export default function Catalog() {
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredProducts.map(product => (
-                  <div key={product.id} onClick={handleProductClick}>
+                  <div key={product.id} onClick={() => handleProductClick(product.id)} className="cursor-pointer">
                     <ProductCard product={product} />
                   </div>
                 ))}
@@ -224,11 +262,7 @@ export default function Catalog() {
                 <Button 
                   variant="link" 
                   className="mt-2 text-accent"
-                  onClick={() => {
-                    setSelectedCategories([]);
-                    setPriceRange([0, 3500000]);
-                    setSearchQuery("");
-                  }}
+                  onClick={resetFilters}
                 >
                   Clear all filters
                 </Button>

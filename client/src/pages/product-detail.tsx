@@ -45,6 +45,11 @@ export default function ProductDetail() {
     loadProduct();
   }, [match, params?.id, toast]);
 
+  // Scroll to top when component loads or product changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [params?.id]);
+
   if (!match || !params) return <div>Product not found</div>;
 
   if (loading) {
@@ -117,9 +122,9 @@ export default function ProductDetail() {
       {/* Breadcrumb */}
       <div className="bg-secondary/30 py-4 border-b border-border">
         <div className="container mx-auto px-4 text-sm text-muted-foreground">
-          <Link href="/"><a className="hover:text-primary">Home</a></Link>
+          <Link href="/" className="hover:text-primary">Home</Link>
           <span className="mx-2">/</span>
-          <Link href="/catalog"><a className="hover:text-primary">Catalog</a></Link>
+          <Link href="/catalog" className="hover:text-primary">Catalog</Link>
           <span className="mx-2">/</span>
           <span className="text-primary font-medium">{product.name}</span>
         </div>
@@ -254,80 +259,80 @@ export default function ProductDetail() {
         {/* Tabs */}
         <div className="mb-20" id="product-details">
           <Tabs defaultValue="specs">
-            <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+            <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent overflow-x-auto">
               <TabsTrigger 
                 value="specs" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-primary px-6 py-3 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 sm:px-6 py-3 text-sm sm:text-base whitespace-nowrap"
               >
                 Technical Specifications
               </TabsTrigger>
               <TabsTrigger 
                 value="shipping" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-primary px-6 py-3 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 sm:px-6 py-3 text-sm sm:text-base whitespace-nowrap"
               >
                 Shipping & Packaging
               </TabsTrigger>
               <TabsTrigger 
                 value="docs" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-primary px-6 py-3 text-base"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 sm:px-6 py-3 text-sm sm:text-base whitespace-nowrap"
               >
                 Documents & Certs
               </TabsTrigger>
             </TabsList>
             <TabsContent value="specs" className="pt-6">
-              <div className="bg-white rounded-lg border border-border max-w-2xl">
+              <div className="bg-white rounded-lg border border-border w-full max-w-full overflow-x-auto">
                 <Table>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-medium bg-muted/30 w-1/3">Origin</TableCell>
-                      <TableCell>{product.specs.origin}</TableCell>
+                      <TableCell className="font-medium bg-muted/30 w-1/3 min-w-[120px]">Origin</TableCell>
+                      <TableCell className="break-words">{product.specs.origin}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium bg-muted/30">Grade</TableCell>
-                      <TableCell>{product.specs.grade}</TableCell>
+                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Grade</TableCell>
+                      <TableCell className="break-words">{product.specs.grade}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium bg-muted/30">Moisture Content</TableCell>
-                      <TableCell>{product.specs.moisture}</TableCell>
+                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Moisture Content</TableCell>
+                      <TableCell className="break-words">{product.specs.moisture}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium bg-muted/30">Purity</TableCell>
-                      <TableCell>{product.specs.purity}</TableCell>
+                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Purity</TableCell>
+                      <TableCell className="break-words">{product.specs.purity}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium bg-muted/30">Shelf Life</TableCell>
-                      <TableCell>12-24 Months (depending on storage)</TableCell>
+                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Shelf Life</TableCell>
+                      <TableCell className="break-words">12-24 Months (depending on storage)</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
               </div>
             </TabsContent>
-            <TabsContent value="shipping" className="pt-6 max-w-3xl">
-               <div className="prose prose-sm max-w-none text-muted-foreground">
-                 <h3 className="text-primary font-serif">Packaging Options</h3>
-                 <ul className="list-disc pl-5 space-y-2 mb-6">
+            <TabsContent value="shipping" className="pt-6 w-full max-w-full">
+               <div className="prose prose-sm max-w-none text-muted-foreground overflow-x-auto">
+                 <h3 className="text-primary font-serif text-lg sm:text-xl">Packaging Options</h3>
+                 <ul className="list-disc pl-5 space-y-2 mb-6 text-sm sm:text-base">
                    <li><strong>Bulk:</strong> Loose in container with liner.</li>
                    <li><strong>Bags:</strong> 25kg / 50kg PP Bags (Polypropylene).</li>
                    <li><strong>Jute Bags:</strong> Traditional 50kg Jute bags for breathability.</li>
                    <li><strong>Custom:</strong> Retail packaging (1kg, 5kg) available upon request.</li>
                  </ul>
-                 <h3 className="text-primary font-serif">Logistics</h3>
-                 <p>We handle all export documentation including Phytosanitary Certificate, Certificate of Origin, and Bill of Lading. Average lead time for shipment is 7-10 days post order confirmation.</p>
+                 <h3 className="text-primary font-serif text-lg sm:text-xl">Logistics</h3>
+                 <p className="text-sm sm:text-base leading-relaxed">We handle all export documentation including Phytosanitary Certificate, Certificate of Origin, and Bill of Lading. Average lead time for shipment is 7-10 days post order confirmation.</p>
                </div>
             </TabsContent>
-            <TabsContent value="docs" className="pt-6">
-               <div className="flex gap-4">
-                  <div className="border border-border p-4 rounded-lg flex items-center gap-3">
-                    <FileCheck className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <p className="font-bold text-sm">ISO 22000 Certificate</p>
+            <TabsContent value="docs" className="pt-6 w-full max-w-full">
+               <div className="flex flex-col sm:flex-row gap-4 overflow-x-auto">
+                  <div className="border border-border p-4 rounded-lg flex items-center gap-3 min-w-[250px] flex-shrink-0">
+                    <FileCheck className="h-8 w-8 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm break-words">ISO 22000 Certificate</p>
                       <span className="text-xs text-accent cursor-pointer hover:underline">View PDF</span>
                     </div>
                   </div>
-                  <div className="border border-border p-4 rounded-lg flex items-center gap-3">
-                    <FileCheck className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <p className="font-bold text-sm">Lab Analysis Report</p>
+                  <div className="border border-border p-4 rounded-lg flex items-center gap-3 min-w-[250px] flex-shrink-0">
+                    <FileCheck className="h-8 w-8 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm break-words">Lab Analysis Report</p>
                       <span className="text-xs text-accent cursor-pointer hover:underline">View Sample</span>
                     </div>
                   </div>

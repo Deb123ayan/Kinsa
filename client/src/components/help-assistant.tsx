@@ -471,16 +471,16 @@ export function HelpAssistant() {
             <Badge variant="secondary">{cartCount} items</Badge>
           </div>
 
-          <ScrollArea className="h-60">
-            <div className="space-y-3">
+          <ScrollArea className="h-48 sm:h-60">
+            <div className="space-y-2 sm:space-y-3">
               {cart.map((item) => (
                 <div
                   key={item.product.id}
-                  className="border rounded-lg p-3 space-y-2"
+                  className="border rounded-lg p-2 sm:p-3 space-y-1 sm:space-y-2"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
+                      <p className="font-medium text-xs sm:text-sm truncate">
                         {item.product.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -488,8 +488,8 @@ export function HelpAssistant() {
                         {formatPrice(item.product.price)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-sm">
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-medium text-xs sm:text-sm">
                         {formatPrice(item.product.price * item.quantity)}
                       </p>
                     </div>
@@ -586,8 +586,8 @@ export function HelpAssistant() {
             <Badge variant="secondary">{orders.length} orders</Badge>
           </div>
 
-          <ScrollArea className="h-80">
-            <div className="space-y-3">
+          <ScrollArea className="h-60 sm:h-80">
+            <div className="space-y-2 sm:space-y-3">
               {orders.map((order) => {
                 const isConfirmed = order.payments?.some(
                   (p) => p.status === "paid"
@@ -600,12 +600,12 @@ export function HelpAssistant() {
                 return (
                   <div
                     key={order.id}
-                    className="border rounded-lg p-4 space-y-3"
+                    className="border rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-sm">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="font-medium text-xs sm:text-sm">
                             Order #{order.id}
                           </p>
                           <div className="flex items-center gap-1">
@@ -620,15 +620,15 @@ export function HelpAssistant() {
                         <p className="text-xs text-muted-foreground mb-2">
                           {new Date(order.created_at).toLocaleDateString()}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground break-words">
                           {OrderService.formatOrderProducts(order.products)}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         {isConfirmed && (
                           <CheckCircle className="h-4 w-4 text-green-500 mb-1" />
                         )}
-                        <p className="font-medium text-sm">
+                        <p className="font-medium text-xs sm:text-sm">
                           {order.total_amount
                             ? `₹${order.total_amount.toLocaleString()}`
                             : "N/A"}
@@ -706,8 +706,8 @@ export function HelpAssistant() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 h-64 pr-4">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 h-48 sm:h-64 pr-2 sm:pr-4">
+        <div className="space-y-3 sm:space-y-4">
           {chatMessages.map((message) => (
             <div
               key={message.id}
@@ -716,13 +716,15 @@ export function HelpAssistant() {
               }`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-2 sm:p-3 ${
                   message.type === "user"
                     ? "bg-accent text-white"
                     : "bg-muted text-foreground"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
+                  {message.content}
+                </p>
                 <p className="text-xs opacity-70 mt-1">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
@@ -759,26 +761,32 @@ export function HelpAssistant() {
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleChatSubmit} className="flex gap-2">
+      <form onSubmit={handleChatSubmit} className="flex gap-1 sm:gap-2">
         <Input
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
-          placeholder="Ask me about your orders, account, or anything else..."
-          className="flex-1"
+          placeholder="Ask me anything..."
+          className="flex-1 text-xs sm:text-sm"
           disabled={isTyping}
         />
         <Button
           type="submit"
           size="icon"
           disabled={!chatInput.trim() || isTyping}
+          className="h-8 w-8 sm:h-10 sm:w-10"
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </form>
 
-      <div className="text-xs text-muted-foreground text-center">
-        Try asking: "Show my orders", "What's my account info?", or "Help me
-        track order #123"
+      <div className="text-xs text-muted-foreground text-center px-2">
+        <span className="hidden sm:inline">
+          Try asking: "Show my orders", "What's my account info?", or "Help me
+          track order #123"
+        </span>
+        <span className="sm:hidden">
+          Ask about orders, account, or tracking
+        </span>
       </div>
     </motion.div>
   );
@@ -802,7 +810,7 @@ export function HelpAssistant() {
     <>
       {/* Floating Help Button */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 1, type: "spring", stiffness: 260, damping: 20 }}
@@ -832,10 +840,10 @@ export function HelpAssistant() {
               setShowNotification(false);
               setCurrentView("greeting");
             }}
-            className="relative h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-accent hover:bg-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
             size="icon"
           >
-            <HelpCircle className="h-6 w-6" />
+            <HelpCircle className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
         </div>
       </motion.div>
@@ -855,95 +863,99 @@ export function HelpAssistant() {
 
             {/* Modal */}
             <motion.div
-              className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)]"
+              className="fixed inset-3 sm:inset-auto sm:bottom-6 sm:right-6 z-50 flex items-end justify-end sm:block"
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              <Card className="shadow-2xl border-0">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MessageCircle className="h-5 w-5 text-accent" />
-                      <CardTitle className="text-lg">ANYA</CardTitle>
+              <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg sm:w-96 max-h-[calc(100vh-6rem)] sm:max-h-none">
+                <Card className="shadow-2xl border-0 max-h-[calc(100vh-6rem)] overflow-hidden">
+                  <CardHeader className="pb-3 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5 text-accent" />
+                        <CardTitle className="text-lg">ANYA</CardTitle>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsOpen(false)}
+                        className="h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsOpen(false)}
-                      className="h-8 w-8"
+                  </CardHeader>
+
+                  <CardContent className="overflow-y-auto">
+                    <div
+                      className={`${
+                        currentView === "chat"
+                          ? "h-80 sm:h-96 max-h-[calc(100vh-12rem)]"
+                          : "min-h-[280px] sm:min-h-[300px] max-h-[calc(100vh-12rem)]"
+                      }`}
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
+                      {renderCurrentView()}
+                    </div>
 
-                <CardContent>
-                  <div
-                    className={`${
-                      currentView === "chat" ? "h-96" : "min-h-[300px]"
-                    }`}
-                  >
-                    {renderCurrentView()}
-                  </div>
+                    {/* Contact Support - Show on all views except chat */}
+                    {currentView !== "chat" && (
+                      <div className="border-t pt-4 mt-4">
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Need more help? Contact our support team.
+                        </p>
+                        <div className="space-y-2">
+                          {currentView !== "greeting" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={resetToGreeting}
+                            >
+                              Main Menu
+                            </Button>
+                          )}
 
-                  {/* Contact Support - Show on all views except chat */}
-                  {currentView !== "chat" && (
-                    <div className="border-t pt-4 mt-4">
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Need more help? Contact our support team.
-                      </p>
-                      <div className="space-y-2">
-                        {currentView !== "greeting" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={resetToGreeting}
+                          <div
+                            className={`grid gap-2 ${
+                              currentView === "greeting"
+                                ? "grid-cols-2"
+                                : "grid-cols-1"
+                            }`}
                           >
-                            Main Menu
-                          </Button>
-                        )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+                              onClick={() => {
+                                setIsOpen(false);
+                                openWhatsAppChat(currentView);
+                              }}
+                            >
+                              <MessageSquare className="h-3 w-3 mr-1" />
+                              WhatsApp
+                            </Button>
 
-                        <div
-                          className={`grid gap-2 ${
-                            currentView === "greeting"
-                              ? "grid-cols-2"
-                              : "grid-cols-1"
-                          }`}
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
-                            onClick={() => {
-                              setIsOpen(false);
-                              openWhatsAppChat(currentView);
-                            }}
-                          >
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            WhatsApp
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => {
-                              setIsOpen(false);
-                              setLocation("/contact");
-                            }}
-                          >
-                            <MessageCircle className="h-3 w-3 mr-1" />
-                            Contact Form
-                          </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                setIsOpen(false);
+                                setLocation("/contact");
+                              }}
+                            >
+                              <MessageCircle className="h-3 w-3 mr-1" />
+                              Contact Form
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </motion.div>
           </>
         )}

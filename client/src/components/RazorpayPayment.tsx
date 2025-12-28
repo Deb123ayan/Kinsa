@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Shield, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  CreditCard,
+  Shield,
+  Loader2,
+  Smartphone,
+  Wallet,
+  Building2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -41,6 +49,8 @@ export function RazorpayPayment({
 }: RazorpayPaymentProps) {
   const [loading, setLoading] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<string>("upi");
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -59,7 +69,53 @@ export function RazorpayPayment({
     });
   };
 
-  const handlePayment = async () => {
+  const getPaymentMethodConfig = (method: string) => {
+    const baseConfig: any = {
+      display: {
+        blocks: {
+          banks: {
+            name: `Pay using ${method.toUpperCase()}`,
+            instruments: [] as any[],
+          },
+        },
+        sequence: ["block.banks"],
+        preferences: {
+          show_default_blocks: false,
+        },
+      },
+    };
+
+    switch (method) {
+      case "upi":
+        baseConfig.display.blocks.banks.instruments = [{ method: "upi" }];
+        break;
+      case "card":
+        baseConfig.display.blocks.banks.instruments = [{ method: "card" }];
+        break;
+      case "netbanking":
+        baseConfig.display.blocks.banks.instruments = [
+          { method: "netbanking" },
+        ];
+        break;
+      case "wallet":
+        baseConfig.display.blocks.banks.instruments = [{ method: "wallet" }];
+        break;
+      default:
+        baseConfig.display.preferences.show_default_blocks = true;
+        baseConfig.display.blocks.banks.instruments = [
+          { method: "upi" },
+          { method: "card" },
+          { method: "netbanking" },
+          { method: "wallet" },
+        ];
+    }
+
+    return baseConfig;
+  };
+
+  const handlePayment = async (
+    paymentMethod: string = selectedPaymentMethod
+  ) => {
     if (!user?.email) {
       toast({
         title: "Authentication Required",
@@ -68,10 +124,6 @@ export function RazorpayPayment({
       });
       return;
     }
-
-    // Debug: Check current auth state
-    console.log("Current user:", user);
-    console.log("User email:", user.email);
 
     setLoading(true);
 
@@ -104,6 +156,7 @@ export function RazorpayPayment({
           shippingCost: shippingCost || 0,
           total_amount: amount,
           user_email: user.email,
+          preferred_payment_method: paymentMethod,
         },
         orderId,
       });
@@ -113,30 +166,30 @@ export function RazorpayPayment({
       }
 
       const createdOrder = orderResult.order;
-
-      // Store the created order ID for later use
       setCreatedOrderId(createdOrder.id);
 
-      // Configure Razorpay options
+      // Configure Razorpay options with payment method preference
+      const baseOptions = getRazorpayOptions(
+        createdOrder,
+        orderResult.key_id,
+        user.email
+      );
+      const paymentConfig = getPaymentMethodConfig(paymentMethod);
+
       const options = {
-        ...getRazorpayOptions(createdOrder, orderResult.key_id, user.email),
+        ...baseOptions,
+        config: paymentConfig,
         handler: async (response: any) => {
           try {
             console.log("=== RAZORPAY RESPONSE ===");
             console.log("Razorpay response:", response);
-            console.log("Original order ID from creation:", createdOrder.id);
-            console.log(
-              "Razorpay order ID from response:",
-              response.razorpay_order_id
-            );
+            console.log("Payment method used:", paymentMethod);
 
-            // In test mode, use our original order ID instead of Razorpay's response
             const orderIdToUse = createdOrder.id;
-            console.log("Using order ID for verification:", orderIdToUse);
 
             // Verify payment
             const verificationResult = await verifyRazorpayPayment({
-              razorpay_order_id: orderIdToUse, // Use our original order ID
+              razorpay_order_id: orderIdToUse,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               order_id: orderId,
@@ -145,7 +198,7 @@ export function RazorpayPayment({
             if (verificationResult.success) {
               toast({
                 title: "Payment Successful!",
-                description: "Your payment has been processed successfully.",
+                description: `Your payment via ${paymentMethod.toUpperCase()} has been processed successfully.`,
               });
               onSuccess?.(response.razorpay_payment_id);
             } else {
@@ -174,12 +227,6 @@ export function RazorpayPayment({
               variant: "destructive",
             });
           },
-          // Add test mode handler for international card issues
-          onhidden: () => {
-            console.log(
-              "Payment modal hidden - checking for test mode completion"
-            );
-          },
         },
       };
 
@@ -200,6 +247,37 @@ export function RazorpayPayment({
     }
   };
 
+  const paymentMethods = [
+    {
+      id: "upi",
+      name: "UPI",
+      icon: Smartphone,
+      description: "Pay using UPI apps like GPay, PhonePe, Paytm",
+      popular: true,
+    },
+    {
+      id: "card",
+      name: "Cards",
+      icon: CreditCard,
+      description: "Credit/Debit Cards, EMI options available",
+      popular: false,
+    },
+    {
+      id: "netbanking",
+      name: "Net Banking",
+      icon: Building2,
+      description: "Direct bank transfer from your account",
+      popular: false,
+    },
+    {
+      id: "wallet",
+      name: "Wallets",
+      icon: Wallet,
+      description: "Paytm, Mobikwik, Amazon Pay & more",
+      popular: false,
+    },
+  ];
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -217,7 +295,7 @@ export function RazorpayPayment({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="flex justify-between items-center p-4 bg-secondary/20 rounded-lg">
           <span className="font-medium">Total Amount:</span>
           <span className="text-2xl font-bold text-primary">
@@ -225,30 +303,117 @@ export function RazorpayPayment({
           </span>
         </div>
 
+        {/* Payment Method Selection */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-sm">Choose Payment Method</h3>
+          <Tabs
+            value={selectedPaymentMethod}
+            onValueChange={setSelectedPaymentMethod}
+          >
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+              {paymentMethods.map((method) => (
+                <TabsTrigger
+                  key={method.id}
+                  value={method.id}
+                  className="text-xs"
+                >
+                  <method.icon className="h-4 w-4 mr-1" />
+                  {method.name}
+                  {method.popular && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 text-[10px] px-1"
+                    >
+                      Popular
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {paymentMethods.map((method) => (
+              <TabsContent key={method.id} value={method.id} className="mt-4">
+                <div className="p-4 border rounded-lg bg-secondary/10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <method.icon className="h-5 w-5 text-primary" />
+                    <div>
+                      <h4 className="font-medium">{method.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {method.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {method.id === "upi" && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Smartphone className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-900">
+                          UPI Benefits
+                        </span>
+                      </div>
+                      <ul className="text-xs text-blue-800 space-y-1">
+                        <li>• Instant payment confirmation</li>
+                        <li>• No additional charges</li>
+                        <li>• Works with all UPI apps</li>
+                        <li>• Secure & encrypted transactions</li>
+                      </ul>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => handlePayment(method.id)}
+                    disabled={disabled || loading || amount <= 0}
+                    className="w-full mt-3"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <method.icon className="h-4 w-4 mr-2" />
+                        Pay {formatPrice(amount)} via {method.name}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+
+        {/* Quick Pay with All Methods */}
+        <div className="border-t pt-4">
+          <Button
+            onClick={() => handlePayment("all")}
+            disabled={disabled || loading || amount <= 0}
+            variant="outline"
+            className="w-full"
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Pay {formatPrice(amount)} - All Methods
+              </>
+            )}
+          </Button>
+        </div>
+
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>• Secure payment processing with Razorpay</p>
           <p>• Supports UPI, Cards, Net Banking & Wallets</p>
           <p>• Test mode - No real money will be charged</p>
+          <p>• UPI payments are processed instantly</p>
         </div>
-
-        <Button
-          onClick={handlePayment}
-          disabled={disabled || loading || amount <= 0}
-          className="w-full"
-          size="lg"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <CreditCard className="h-4 w-4 mr-2" />
-              Pay {formatPrice(amount)}
-            </>
-          )}
-        </Button>
 
         <p className="text-xs text-center text-muted-foreground">
           By proceeding, you agree to our terms and conditions

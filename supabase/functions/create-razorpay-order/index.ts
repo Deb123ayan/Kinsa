@@ -1,4 +1,7 @@
-// @deno-types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
+// Supabase Edge Function for Razorpay Order Creation
+// This runs on Deno runtime, not Node.js
+/// <reference path="./types.d.ts" />
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -49,10 +52,10 @@ serve(async (req: Request) => {
     } = await supabase.auth.getUser(jwt);
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
     // ✅ Parse request body
@@ -76,22 +79,19 @@ serve(async (req: Request) => {
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
 
     // ✅ Create Razorpay order
-    const razorpayResponse = await fetch(
-      "https://api.razorpay.com/v1/orders",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${auth}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: Math.round(amount * 100), // paise
-          currency,
-          receipt: receipt || `receipt_${Date.now()}`,
-          notes: notes || {},
-        }),
-      }
-    );
+    const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: Math.round(amount * 100), // paise
+        currency,
+        receipt: receipt || `receipt_${Date.now()}`,
+        notes: notes || {},
+      }),
+    });
 
     const razorpayOrder = await razorpayResponse.json();
 

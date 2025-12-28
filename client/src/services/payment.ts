@@ -389,18 +389,24 @@ export function getRazorpayOptions(
         console.log("Payment modal dismissed");
       },
     },
-    // Add test mode configuration
+    // Enhanced configuration for better UPI support
     config: {
       display: {
         blocks: {
           banks: {
-            name: "Pay using " + order.currency,
+            name: "Pay using UPI, Cards & More",
             instruments: [
+              {
+                method: "upi",
+              },
               {
                 method: "card",
               },
               {
-                method: "upi",
+                method: "netbanking",
+              },
+              {
+                method: "wallet",
               },
             ],
           },
@@ -411,5 +417,18 @@ export function getRazorpayOptions(
         },
       },
     },
+    // UPI specific options
+    upi: {
+      flow: "collect", // or "intent" for UPI apps
+    },
+    // Retry configuration
+    retry: {
+      enabled: true,
+      max_count: 3,
+    },
+    // Timeout configuration
+    timeout: 300, // 5 minutes
+    // Remember customer preference
+    remember_customer: false,
   };
 }

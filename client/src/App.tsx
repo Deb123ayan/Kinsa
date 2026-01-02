@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/auth-context";
 import { CartProvider } from "@/context/cart-context";
+import { LanguageProvider } from "@/context/language-context";
+import { useLanguageDirection } from "@/hooks/use-language-direction";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Catalog from "@/pages/catalog";
@@ -21,6 +23,9 @@ import { withProtectedRoute } from "@/pages/protected";
 const ProtectedDashboard = withProtectedRoute(Dashboard);
 
 function Router() {
+  // Initialize language direction handling
+  useLanguageDirection();
+  
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -46,14 +51,16 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </CartProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

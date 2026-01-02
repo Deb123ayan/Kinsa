@@ -10,9 +10,23 @@
     "check": "tsc",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
-    "supabase:deploy": "supabase functions deploy"
+    "supabase:deploy": "supabase functions deploy",
+    "mobile:build": "npm run build && npx cap sync",
+    "mobile:android": "npm run mobile:build && npx cap open android",
+    "mobile:ios": "npm run mobile:build && npx cap open ios",
+    "mobile:run:android": "npm run mobile:build && npx cap run android",
+    "mobile:run:ios": "npm run mobile:build && npx cap run ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/device": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -83,7 +97,9 @@
     "supabase": "^1.200.3",
     "tailwindcss": "^4.1.14",
     "typescript": "5.6.3",
-    "vite": "^7.1.9"
+    "vite": "^7.1.9",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-window": "^7.4.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

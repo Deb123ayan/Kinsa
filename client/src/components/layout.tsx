@@ -6,18 +6,21 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
+import { useLanguage } from "@/context/language-context";
+import { LanguageSelector } from "@/components/language-selector";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const { isLoggedIn, logout } = useAuth();
   const { cartCount } = useCart();
+  const { t } = useLanguage();
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/catalog", label: "Catalog" },
-    { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Contact" },
+    { href: "/", label: t('nav.home') },
+    { href: "/catalog", label: t('nav.catalog') },
+    { href: "/about", label: t('nav.about') },
+    { href: "/contact", label: t('nav.contact') },
   ];
 
   const NavContent = ({ className }: { className?: string }) => (
@@ -88,6 +91,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 justify-end ml-auto">
+            {/* Language Selector */}
+            <LanguageSelector variant="compact" className="shrink-0" />
+            
             {isLoggedIn ? (
               <>
                 <Link href="/dashboard">
@@ -124,7 +130,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 
                 <Link href="/auth">
                   <Button variant="outline" className="hidden sm:flex border-primary text-primary hover:bg-primary hover:text-primary-foreground hover:scale-105 hover:shadow-lg shrink-0 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10 transition-all duration-200 group">
-                    <span className="hidden md:inline group-hover:animate-pulse">Partner </span>Login
+                    <span className="hidden md:inline group-hover:animate-pulse">Partner </span>{t('nav.login').replace('Partner ', '')}
                   </Button>
                 </Link>
               </>
@@ -139,10 +145,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] sm:w-[350px]">
                 <div className="flex flex-col gap-6 mt-6">
+                  {/* Language Selector */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Language</span>
+                    <LanguageSelector variant="default" />
+                  </div>
+                  
                   {!isLoggedIn && <NavContent className="flex flex-col gap-4" />}
                   {!isLoggedIn && (
                     <Link href="/auth">
-                      <Button className="w-full" onClick={() => setIsMobileMenuOpen(false)}>Partner Login</Button>
+                      <Button className="w-full" onClick={() => setIsMobileMenuOpen(false)}>{t('nav.login')}</Button>
                     </Link>
                   )}
                   {isLoggedIn && (
@@ -150,18 +162,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <Link href="/dashboard">
                         <Button variant="outline" className="w-full justify-start" onClick={() => setIsMobileMenuOpen(false)}>
                           <LayoutDashboard className="h-4 w-4 mr-2" />
-                          Dashboard
+                          {t('nav.dashboard')}
                         </Button>
                       </Link>
                       <Link href="/cart">
                         <Button variant="outline" className="w-full justify-start" onClick={() => setIsMobileMenuOpen(false)}>
                           <ShoppingCart className="h-4 w-4 mr-2" />
-                          Cart {cartCount > 0 && `(${cartCount})`}
+                          {t('nav.cart')} {cartCount > 0 && `(${cartCount})`}
                         </Button>
                       </Link>
                       <Button variant="destructive" className="w-full justify-start" onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
                         <LogOut className="h-4 w-4 mr-2" />
-                        Logout
+                        {t('nav.logout')}
                       </Button>
                     </div>
                   )}

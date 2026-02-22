@@ -9,9 +9,10 @@ export interface CartItem {
 export interface DatabaseCartItem {
   id: number;
   created_at: string;
-  products: any; // JSON field - changed from 'product' to 'products'
+  products: any; 
   name: string | null;
   email: string | null;
+  user_id: string | null;
 }
 
 export async function saveCartItem(item: CartItem): Promise<{ success: boolean; error?: string }> {
@@ -23,12 +24,15 @@ export async function saveCartItem(item: CartItem): Promise<{ success: boolean; 
 
     console.log('Saving cart item:', { productId: item.product.id, userEmail: user.email });
 
-    // Check if item already exists in cart
-    const { data: existingItems, error: fetchError } = await supabase
+    // Check if item already exists in cart by fetching and filtering in JS for reliability
+    const { data: allItems, error: fetchError } = await supabase
       .from('cart')
       .select('*')
-      .eq('email', user.email)
-      .eq('products->>id', item.product.id);
+      .or(`email.eq.${user.email},user_id.eq.${user.id}`);
+
+    const existingItems = allItems?.filter(dbItem => 
+      dbItem.products && (dbItem.products.id?.toString() === item.product.id.toString())
+    ) || [];
 
     if (fetchError) {
       console.error('Error checking existing cart items:', fetchError);
@@ -41,12 +45,13 @@ export async function saveCartItem(item: CartItem): Promise<{ success: boolean; 
         quantity: item.quantity
       },
       name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
-      email: user.email
+      email: user.email,
+      user_id: user.id
     };
 
     if (existingItems && existingItems.length > 0) {
       // Update existing item
-      console.log('Updating existing cart item');
+      console.log('Updating existing cart item with row ID:', existingItems[0].id);
       const { error: updateError } = await supabase
         .from('cart')
         .update(cartData)
@@ -90,7 +95,7 @@ export async function fetchCartItems(): Promise<CartItem[]> {
     const { data, error } = await supabase
       .from('cart')
       .select('*')
-      .eq('email', user.email)
+      .or(`email.eq.${user.email},user_id.eq.${user.id}`)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -131,15 +136,37 @@ export async function removeCartItem(productId: string): Promise<{ success: bool
 
     console.log('Removing cart item:', { productId, userEmail: user.email });
 
-    const { error } = await supabase
+    // Find the record ID first for a more reliable deletion
+    const { data: items, error: fetchError } = await supabase
+      .from('cart')
+      .select('id, products')
+      .or(`email.eq.${user.email},user_id.eq.${user.id}`);
+
+    if (fetchError) {
+      console.error('Error fetching cart items for deletion:', fetchError);
+      return { success: false, error: 'Failed to find item to remove' };
+    }
+
+    // Find the specific record that matches the productId
+    const itemToDelete = items?.find(item => 
+      item.products && (item.products.id?.toString() === productId.toString())
+    );
+
+    if (!itemToDelete) {
+      console.log('Item not found in database cart, nothing to delete');
+      return { success: true }; // Consider it a success if it's already gone
+    }
+
+    console.log('Found record to delete with row ID:', itemToDelete.id);
+
+    const { error: deleteError } = await supabase
       .from('cart')
       .delete()
-      .eq('email', user.email)
-      .eq('products->>id', productId);
+      .eq('id', itemToDelete.id);
 
-    if (error) {
-      console.error('Error removing cart item:', error);
-      return { success: false, error: 'Failed to remove item from cart' };
+    if (deleteError) {
+      console.error('Error removing cart item by row ID:', deleteError);
+      return { success: false, error: 'Failed to delete item from cart' };
     }
 
     console.log('Successfully removed cart item from database');
@@ -160,28 +187,31 @@ export async function updateCartItemQuantity(productId: string, quantity: number
     console.log('Updating cart item quantity:', { productId, quantity, userEmail: user.email });
 
     // Get the existing item
-    const { data: existingItems, error: fetchError } = await supabase
+    const { data: itemToUpdate, error: fetchError } = await supabase
       .from('cart')
-      .select('*')
-      .eq('email', user.email)
-      .eq('products->>id', productId)
-      .single();
+      .select('id, products')
+      .or(`email.eq.${user.email},user_id.eq.${user.id}`);
+    
+    // Manual filter to find the correct product
+    const existingItem = (itemToUpdate as any[])?.find(item => 
+      item.products && (item.products.id?.toString() === productId.toString())
+    );
 
-    if (fetchError || !existingItems) {
+    if (fetchError || !existingItem) {
       console.error('Error fetching cart item for update:', fetchError);
       return { success: false, error: 'Cart item not found' };
     }
 
     // Update the quantity in the products JSON
     const updatedProducts = {
-      ...existingItems.products,
+      ...existingItem.products,
       quantity: quantity
     };
 
     const { error } = await supabase
       .from('cart')
       .update({ products: updatedProducts })
-      .eq('id', existingItems.id);
+      .eq('id', existingItem.id);
 
     if (error) {
       console.error('Error updating cart item quantity:', error);
@@ -208,7 +238,7 @@ export async function clearCart(): Promise<{ success: boolean; error?: string }>
     const { error } = await supabase
       .from('cart')
       .delete()
-      .eq('email', user.email);
+      .or(`email.eq.${user.email},user_id.eq.${user.id}`);
 
     if (error) {
       console.error('Error clearing cart:', error);

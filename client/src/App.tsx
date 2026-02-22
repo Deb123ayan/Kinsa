@@ -19,13 +19,20 @@ import Auth from "@/pages/auth";
 import Legal from "@/pages/legal";
 import Dashboard from "@/pages/dashboard";
 import { withProtectedRoute } from "@/pages/protected";
+import AdminDashboard from "@/pages/admin/dashboard";
+import AdminLogin from "@/pages/admin/login";
+import AdminOrders from "@/pages/admin/orders";
+import AdminPayments from "@/pages/admin/payments";
+import AdminProducts from "@/pages/admin/products";
+import AdminContacts from "@/pages/admin/contacts";
+import AdminManagement from "@/pages/admin/admins";
 
 const ProtectedDashboard = withProtectedRoute(Dashboard);
 
 function Router() {
   // Initialize language direction handling
   useLanguageDirection();
-  
+
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -42,7 +49,16 @@ function Router() {
       <Route path="/terms" component={() => <Legal slug="terms" />} />
       <Route path="/shipping" component={() => <Legal slug="shipping" />} />
       <Route path="/track" component={() => <Legal slug="track" />} />
-      
+
+      {/* Admin routes */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/payments" component={AdminPayments} />
+      <Route path="/admin/products" component={AdminProducts} />
+      <Route path="/admin/contacts" component={AdminContacts} />
+      <Route path="/admin/management" component={AdminManagement} />
+
       <Route component={NotFound} />
     </Switch>
   );

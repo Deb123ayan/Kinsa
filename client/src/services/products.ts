@@ -126,6 +126,7 @@ function transformProduct(dbProduct: DatabaseProduct): Product {
     unit: "MT",
     image:
       dbProduct.img ||
+      dbProduct.image || // Handle both field names
       "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop",
     description: dbProduct.description || "Premium quality product for export.",
     specs,
@@ -135,25 +136,30 @@ function transformProduct(dbProduct: DatabaseProduct): Product {
   };
 }
 
-export async function fetchProducts(): Promise<Product[]> {
+export async function fetchProducts(limit: number = 1000): Promise<Product[]> {
   try {
-    // Add a unique timestamp to prevent caching issues
     const requestId = Date.now();
-    console.log(`[${requestId}] Fetching products...`);
+    console.log(`[${requestId}] Fetching up to ${limit} products from 'Products' table...`);
 
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("Products")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*", { count: 'exact' })
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
     if (error) {
-      console.error(`[${requestId}] Error fetching products:`, error);
+      console.error(`[${requestId}] Supabase error fetching products:`, error);
       throw new Error(`Failed to fetch products: ${error.message}`);
     }
 
     console.log(
-      `[${requestId}] Successfully fetched ${data?.length || 0} products`
+      `[${requestId}] Database returned ${data?.length || 0} products. Total in DB: ${count ?? 'unknown'}`
     );
+    
+    if (!data || data.length === 0) {
+      console.warn(`[${requestId}] No products found in the 'Products' table.`);
+    }
+
     return (data || []).map(transformProduct);
   } catch (error) {
     console.error("Failed to fetch products:", error);
@@ -161,13 +167,22 @@ export async function fetchProducts(): Promise<Product[]> {
   }
 }
 
-export async function fetchProductById(id: string): Promise<Product | null> {
+export async function fetchProductById(idOrSlug: string): Promise<Product | null> {
   try {
-    const { data, error } = await supabase
-      .from("Products")
-      .select("*")
-      .eq("id", parseInt(id))
-      .single();
+    const id = parseInt(idOrSlug);
+    let query = supabase.from("Products").select("*");
+
+    if (!isNaN(id) && id.toString() === idOrSlug) {
+      // It's a numeric ID
+      query = query.eq("id", id);
+    } else {
+      // It's a slug (product name). We convert 'basmati-rice' back to something searchable
+      // We'll search for names that contain the words from the slug
+      const namePattern = idOrSlug.split('-').join(' ');
+      query = query.ilike("name", `%${namePattern}%`);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) {
       if (error.code === "PGRST116") {

@@ -26,7 +26,7 @@ export default function Home() {
     const loadProducts = async () => {
       try {
         const products = await fetchProducts();
-        setFeaturedProducts(products.slice(0, 4));
+        setFeaturedProducts(products);
       } catch (error) {
         console.error('Failed to load products:', error);
         setFeaturedProducts([]);
@@ -55,13 +55,13 @@ export default function Home() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative h-[600px] w-full overflow-hidden bg-primary">
+      <section className="relative h-[450px] md:h-[600px] w-full overflow-hidden bg-primary">
         <div className="absolute inset-0">
           {/* Background Video */}
-          <video 
-            autoPlay 
-            muted 
-            loop 
+          <video
+            autoPlay
+            muted
+            loop
             playsInline
             className="h-full w-full object-cover opacity-80 brightness-110 contrast-110 saturate-90"
             poster={heroImg}
@@ -75,9 +75,9 @@ export default function Home() {
             <source src="/ad.mp4" type="video/mp4" />
           </video>
           {/* Fallback image - always present but behind video */}
-          <img 
-            src={heroImg} 
-            alt="Global Trade" 
+          <img
+            src={heroImg}
+            alt="Global Trade"
             className="absolute inset-0 h-full w-full object-cover opacity-80 -z-10"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/40 to-primary/60" />
@@ -89,15 +89,15 @@ export default function Home() {
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-        
+
         <div className="container relative mx-auto h-full flex flex-col justify-center px-4">
-          <motion.div 
+          <motion.div
             className="max-w-2xl"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <motion.span 
+            <motion.span
               className="inline-block px-3 py-1 mb-6 text-xs font-semibold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 rounded-full backdrop-blur-sm"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -105,24 +105,24 @@ export default function Home() {
             >
               Global Agricultural Trading
             </motion.span>
-            <motion.h1 
-              className="mb-6 font-serif text-5xl font-bold leading-tight text-white md:text-6xl lg:text-7xl"
+            <motion.h1
+              className="mb-6 font-serif text-3xl font-bold leading-tight text-white md:text-5xl lg:text-7xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
               Connecting Nature's Bounty to <span className="text-accent italic">Global Markets</span>
             </motion.h1>
-            <motion.p 
+            <motion.p
               className="mb-8 text-lg text-primary-foreground/80 md:text-xl max-w-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              We specialize in the export of premium grains, spices, and pulses. 
+              We specialize in the export of premium grains, spices, and pulses.
               Ensuring quality from farm to port with certified logistics.
             </motion.p>
-            <motion.div 
+            <motion.div
               className="flex flex-col gap-4 sm:flex-row"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -144,9 +144,9 @@ export default function Home() {
       </section>
 
       {/* Featured Categories */}
-      <section className="py-20 bg-background">
+      <section className="section-py bg-background">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center mb-16 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -170,14 +170,14 @@ export default function Home() {
                 <Link href={`/catalog?category=${cat.id}`}>
                   <div className="group block relative overflow-hidden rounded-lg aspect-[4/5] shadow-lg cursor-pointer">
                     <div className="absolute inset-0">
-                      <img 
-                        src={cat.image} 
-                        alt={cat.name} 
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity group-hover:opacity-90" />
                     </div>
-                    <motion.div 
+                    <motion.div
                       className="absolute inset-0 flex flex-col justify-end p-6"
                       initial={{ y: 20, opacity: 0 }}
                       whileInView={{ y: 0, opacity: 1 }}
@@ -195,9 +195,9 @@ export default function Home() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-20 bg-secondary/30">
+      <section className="section-py bg-secondary/30">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center mb-16 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -247,9 +247,9 @@ export default function Home() {
       </section>
 
       {/* Why Choose Us - 3D Cards */}
-      <section className="py-20 bg-background perspective">
+      <section className="section-py bg-background perspective">
         <div className="container mx-auto px-4">
-          <motion.div 
+          <motion.div
             className="text-center mb-16 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -335,8 +335,8 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground text-center">
-        <motion.div 
+      <section className="section-py bg-primary text-primary-foreground text-center">
+        <motion.div
           className="container mx-auto px-4 max-w-2xl"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

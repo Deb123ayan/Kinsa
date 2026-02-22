@@ -186,17 +186,29 @@ export class OrderService {
 
   static async getUserOrders(userEmail: string): Promise<OrderWithPayment[]> {
     try {
-      // First, get all orders for the user
-      const { data: orders, error: ordersError } = await supabase
+      console.log(`[OrderService] Fetching orders for email: ${userEmail}`);
+      
+      // First, check total orders in the table for debugging
+      const { count: totalCount } = await supabase
         .from('order')
-        .select('*')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log(`[OrderService] Total orders in 'order' table: ${totalCount ?? 0}`);
+
+      // Now fetch user specific orders
+      const { data: orders, error: ordersError, count: userCount } = await supabase
+        .from('order')
+        .select('*', { count: 'exact' })
         .eq('email', userEmail)
         .order('created_at', { ascending: false });
 
       if (ordersError) {
+        console.error(`[OrderService] Supabase error fetching orders:`, ordersError);
         throw ordersError;
       }
 
+      console.log(`[OrderService] Found ${orders?.length || 0} orders for user. (Exact count: ${userCount ?? 0})`);
+      
       if (!orders || orders.length === 0) {
         return [];
       }
@@ -370,10 +382,40 @@ export class OrderService {
       return 'Product details available';
     }
   }
+
+  static async updateOrderStatus(orderId: number, status: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('order')
+        .update({ status })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to update order status' 
+      };
+    }
+  }
 }
 
 // Export the createOrder function for backward compatibility
 export const createOrder = OrderService.createOrder;
+export const updateOrderStatus = OrderService.updateOrderStatus;
+
+// Export fetchAllOrders for administrative context
+export const fetchAllOrders = async (): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('order')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
 
 // Export getUserOrders function that automatically gets user email from auth
 export const getUserOrders = async (): Promise<Order[]> => {

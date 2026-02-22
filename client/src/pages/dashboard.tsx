@@ -75,10 +75,13 @@ export default function Dashboard() {
         setProductsLoading(true);
         setProductsError(null);
         const productsData = await fetchProducts();
-        setFeaturedProducts(productsData.slice(0, 4));
+        console.log("Dashboard: Successfully fetched products:", productsData.length);
+        // Show all products instead of slicing at 8
+        setFeaturedProducts(productsData);
+        console.log("Dashboard: Displaying all available items:", productsData.length);
       } catch (error) {
-        console.error("Failed to load products:", error);
-        setProductsError("Failed to load featured products");
+        console.error("Dashboard: Failed to load products:", error);
+        setProductsError("Failed to load featured products. " + (error instanceof Error ? error.message : ""));
       } finally {
         setProductsLoading(false);
       }
@@ -162,21 +165,17 @@ export default function Dashboard() {
   }
 
   // Calculate stats from real orders
-  const activeOrders = orders.filter(
+  const activeOrders = Array.isArray(orders) ? orders.filter(
     (order: Order) =>
       order.status === "processing" ||
       order.status === "pending" ||
       order.status === "in transit"
-  ).length;
-  const totalVolume = orders.reduce((sum: number, order: Order) => {
-    return (
-      sum +
-      order.items.reduce(
-        (itemSum: number, item: any) => itemSum + item.quantity,
-        0
-      )
-    );
-  }, 0);
+  ).length : 0;
+
+  const totalVolume = Array.isArray(orders) ? orders.reduce((sum: number, order: Order) => {
+    const items = order.items || [];
+    return sum + items.reduce((itemSum: number, item: any) => itemSum + (Number(item.quantity) || 0), 0);
+  }, 0) : 0;
   const pendingOrders = orders.filter(
     (order: Order) => order.status === "pending"
   ).length;
@@ -314,7 +313,8 @@ export default function Dashboard() {
                       {t('dashboard.featured_products')}
                     </h3>
                     {productsError ? (
-                      <div className="text-center py-8 text-muted-foreground">
+                      <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                        <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p>{productsError}</p>
                         <Button
                           variant="outline"
@@ -328,25 +328,25 @@ export default function Dashboard() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                         {productsLoading
                           ? Array.from({ length: 3 }).map((_, idx) => (
-                              <div key={idx} className="animate-pulse">
-                                <div className="bg-secondary/20 rounded-lg h-80"></div>
-                              </div>
-                            ))
+                            <div key={idx} className="animate-pulse">
+                              <div className="bg-secondary/20 rounded-lg h-80"></div>
+                            </div>
+                          ))
                           : featuredProducts.map(
-                              (product: Product, idx: number) => (
-                                <motion.div
-                                  key={product.id}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{
-                                    duration: 0.5,
-                                    delay: idx * 0.05,
-                                  }}
-                                >
-                                  <ProductCard product={product} />
-                                </motion.div>
-                              )
-                            )}
+                            (product: Product, idx: number) => (
+                              <motion.div
+                                key={product.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                  duration: 0.5,
+                                  delay: idx * 0.05,
+                                }}
+                              >
+                                <ProductCard product={product} />
+                              </motion.div>
+                            )
+                          )}
                       </div>
                     )}
                   </div>
@@ -502,19 +502,19 @@ export default function Dashboard() {
                                     order.status === "delivered"
                                       ? "default"
                                       : order.status === "in transit"
-                                      ? "default"
-                                      : order.status === "processing"
-                                      ? "secondary"
-                                      : order.status === "cancelled"
-                                      ? "destructive"
-                                      : "outline"
+                                        ? "default"
+                                        : order.status === "processing"
+                                          ? "secondary"
+                                          : order.status === "cancelled"
+                                            ? "destructive"
+                                            : "outline"
                                   }
                                   className={
                                     order.status === "in transit"
                                       ? "bg-green-100 text-green-800 border-green-200"
                                       : order.status === "delivered"
-                                      ? "bg-green-100 text-green-800 border-green-200"
-                                      : ""
+                                        ? "bg-green-100 text-green-800 border-green-200"
+                                        : ""
                                   }
                                 >
                                   {(order.status?.charAt(0).toUpperCase() ||

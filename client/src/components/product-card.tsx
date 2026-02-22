@@ -8,12 +8,12 @@ import { formatPriceWithUnit } from "@/lib/currency";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <Link href={`/product/${product.id}`}>
+    <Link href={`/product/${product.name.toLowerCase().split(' ').join('-')}`}>
       <div className="group block h-full cursor-pointer">
         <Card className="h-full overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
           <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-            <img 
-              src={product.image} 
+            <img
+              src={product.image}
               alt={product.name}
               className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
             />
@@ -28,7 +28,7 @@ export function ProductCard({ product }: { product: Product }) {
               </Badge>
             </div>
           </div>
-          
+
           <CardContent className="p-4 flex-1">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-accent uppercase tracking-wider">{product.specs.origin}</span>
@@ -50,7 +50,7 @@ export function ProductCard({ product }: { product: Product }) {
               </div>
             </div>
           </CardContent>
-          
+
           <CardFooter className="p-4 pt-0 mt-auto flex items-center justify-between border-t border-border/50 bg-secondary/20">
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground">Price Estimate</span>

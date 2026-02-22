@@ -14,6 +14,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   getUserDisplayName: () => string;
+  isAdmin: boolean;
+  adminLogin: (email: string, password: string) => Promise<void>;
+  adminLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,24 +24,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const checkAdminStatus = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        if (data && !error) {
+          setIsAdmin(true);
+          return true;
+        }
+      } catch (e) {
+        console.error("Admin status check failed");
+      }
+      return false;
+    };
+
+    const syncAuthState = async (currentSession: Session | null) => {
+      const savedAdmin = localStorage.getItem('kinsa_admin');
+
+      if (currentSession?.user) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        await checkAdminStatus(currentSession.user.id);
+      } else if (savedAdmin) {
+        const adminData = JSON.parse(savedAdmin);
+        setIsAdmin(true);
+        setUser({ email: adminData.email, id: adminData.user_id } as any);
+        setSession(null);
+      } else {
+        setSession(null);
+        setUser(null);
+        setIsAdmin(false);
+      }
+
       setLoading(false);
+    };
+
+    // Initial sync
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      syncAuthState(session);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // For initial SIGNED_IN event, session might already be handled by getSession
+      // but syncAuthState handles it safely
+      syncAuthState(session);
     });
 
     return () => subscription.unsubscribe();
@@ -68,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    
+
     // Redirect to home page after successful logout
     setLocation('/');
   };
@@ -92,27 +133,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserDisplayName = () => {
     if (!user) return '';
-    
+
     // Try to get first name from user metadata
     const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
     if (fullName) {
       const firstName = fullName.split(' ')[0];
       return firstName;
     }
-    
+
     // Fallback to email if no name available
     return user.email?.split('@')[0] || 'User';
+  };
+
+  const adminLogin = async (email: string, password: string) => {
+    // Call the RPC function we created in SQL
+    const { data, error } = await supabase.rpc('verify_admin_credentials', {
+      p_email: email,
+      p_password: password
+    });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const adminData = data[0];
+      // Store in localStorage for persistence
+      localStorage.setItem('kinsa_admin', JSON.stringify(adminData));
+      setIsAdmin(true);
+      // We also set a dummy user state if not logged in to satisfy basic checks
+      if (!user) {
+        setUser({ email: adminData.email, id: adminData.user_id } as any);
+      }
+    } else {
+      throw new Error('Invalid administrative credentials');
+    }
+  };
+
+  const adminLogout = () => {
+    localStorage.removeItem('kinsa_admin');
+    setIsAdmin(false);
+    setLocation('/');
   };
 
   const value = {
     user,
     session,
-    isLoggedIn: !!user,
+    isLoggedIn: !!user || isAdmin,
+    isAdmin,
     loading,
     login,
+    adminLogin,
+    adminLogout,
     signUp,
     signInWithGoogle,
-    logout,
+    logout: async () => {
+      if (isAdmin) {
+        localStorage.removeItem('kinsa_admin');
+        setIsAdmin(false);
+      }
+
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setLocation('/');
+    },
     resetPassword,
     getUserDisplayName,
   };

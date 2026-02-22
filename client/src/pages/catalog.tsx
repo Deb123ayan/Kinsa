@@ -46,6 +46,7 @@ export default function Catalog() {
   const [maxPrice, setMaxPrice] = useState(3500000);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
 
   // Debounced values for performance
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -57,14 +58,15 @@ export default function Catalog() {
       try {
         setLoading(true);
         const fetchedProducts = await fetchProducts();
+        console.log("Catalog: Fetched products from DB:", fetchedProducts.length);
         setProducts(fetchedProducts);
-        
+
         // Update price range based on actual product prices
         if (fetchedProducts.length > 0) {
           const prices = fetchedProducts.map(p => p.price);
           const calculatedMaxPrice = Math.max(...prices);
           const roundedMaxPrice = Math.ceil(calculatedMaxPrice / 100000) * 100000; // Round up to nearest 100k
-          
+
           setMaxPrice(roundedMaxPrice);
           setPriceRange([0, roundedMaxPrice]);
         }
@@ -91,20 +93,38 @@ export default function Catalog() {
         return false;
       }
       // Category
-      if (selectedCategories.length > 0 && !selectedCategories.includes(product.category.toLowerCase())) {
-        return false;
+      if (selectedCategories.length > 0) {
+        const productCat = product.category.toLowerCase();
+        if (!selectedCategories.some(cat => cat.toLowerCase() === productCat)) {
+          return false;
+        }
       }
       // Price
       if (product.price < debouncedPriceRange[0] || product.price > debouncedPriceRange[1]) {
         return false;
       }
+      // Availability
+      if (showInStockOnly && !product.inStock) {
+        return false;
+      }
       return true;
     });
-  }, [products, debouncedSearchQuery, selectedCategories, debouncedPriceRange]);
+  }, [products, debouncedSearchQuery, selectedCategories, debouncedPriceRange, showInStockOnly]);
+
+  // Log filtered results
+  useEffect(() => {
+    console.log("Catalog: Filtered results:", filteredProducts.length, {
+      total: products.length,
+      search: debouncedSearchQuery,
+      categories: selectedCategories,
+      price: debouncedPriceRange,
+      showInStockOnly
+    });
+  }, [filteredProducts, products.length, debouncedSearchQuery, selectedCategories, debouncedPriceRange, showInStockOnly]);
 
   const toggleCategory = useCallback((catId: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(catId) 
+    setSelectedCategories(prev =>
+      prev.includes(catId)
         ? prev.filter(c => c !== catId)
         : [...prev, catId]
     );
@@ -120,6 +140,7 @@ export default function Catalog() {
     setSelectedCategories([]);
     setPriceRange([0, maxPrice]);
     setSearchQuery("");
+    setShowInStockOnly(false);
   }, [maxPrice]);
 
   const SidebarFilters = () => (
@@ -129,13 +150,13 @@ export default function Catalog() {
         <div className="space-y-3">
           {CATEGORIES.map(cat => (
             <div key={cat.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`cat-${cat.id}`} 
+              <Checkbox
+                id={`cat-${cat.id}`}
                 checked={selectedCategories.includes(cat.id)}
                 onCheckedChange={() => toggleCategory(cat.id)}
               />
-              <label 
-                htmlFor={`cat-${cat.id}`} 
+              <label
+                htmlFor={`cat-${cat.id}`}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
                 {cat.name}
@@ -157,11 +178,11 @@ export default function Catalog() {
           </div>
         ) : (
           <>
-            <Slider 
+            <Slider
               value={priceRange}
               onValueChange={setPriceRange}
-              max={maxPrice} 
-              step={Math.max(1000, Math.floor(maxPrice / 100))} 
+              max={maxPrice}
+              step={Math.max(1000, Math.floor(maxPrice / 100))}
               className="mb-4"
             />
             <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -176,15 +197,19 @@ export default function Catalog() {
       </div>
 
       <div>
-         <h3 className="font-serif font-bold text-primary mb-4">Availability</h3>
-         <div className="flex items-center space-x-2">
-            <Checkbox id="instock" defaultChecked />
-            <label htmlFor="instock" className="text-sm font-medium leading-none cursor-pointer">In Stock Only</label>
-         </div>
+        <h3 className="font-serif font-bold text-primary mb-4">Availability</h3>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="instock"
+            checked={showInStockOnly}
+            onCheckedChange={(checked) => setShowInStockOnly(!!checked)}
+          />
+          <label htmlFor="instock" className="text-sm font-medium leading-none cursor-pointer">In Stock Only</label>
+        </div>
       </div>
-      
-      <Button 
-        variant="outline" 
+
+      <Button
+        variant="outline"
         className="w-full"
         onClick={resetFilters}
       >
@@ -197,33 +222,33 @@ export default function Catalog() {
     <Layout>
       <div className="bg-secondary/30 py-12 border-b border-border">
         <div className="container mx-auto px-4">
-           <h1 className="font-serif text-4xl font-bold text-primary mb-4">Product Catalog</h1>
-           <p className="text-muted-foreground max-w-2xl">Browse our extensive collection of premium agricultural commodities. Sourced from the best regions and processed with care.</p>
+          <h1 className="font-serif text-4xl font-bold text-primary mb-4">Product Catalog</h1>
+          <p className="text-muted-foreground max-w-2xl">Browse our extensive collection of premium agricultural commodities. Sourced from the best regions and processed with care.</p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col lg:flex-row gap-12">
-          
+
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
-             <SidebarFilters />
+            <SidebarFilters />
           </aside>
 
           {/* Mobile Filter Toggle */}
           <div className="lg:hidden mb-6 flex gap-4">
-             <Sheet>
-               <SheetTrigger asChild>
-                 <Button variant="outline" className="flex-1">
-                   <Filter className="mr-2 h-4 w-4" /> Filters
-                 </Button>
-               </SheetTrigger>
-               <SheetContent side="left">
-                 <div className="mt-8">
-                   <SidebarFilters />
-                 </div>
-               </SheetContent>
-             </Sheet>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="flex-1">
+                  <Filter className="mr-2 h-4 w-4" /> Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <div className="mt-8">
+                  <SidebarFilters />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
 
           {/* Main Content */}
@@ -231,8 +256,8 @@ export default function Catalog() {
             {/* Search Bar */}
             <div className="relative mb-8">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search products (e.g. Basmati, Turmeric)..." 
+              <Input
+                placeholder="Search products (e.g. Basmati, Turmeric)..."
                 className="pl-10 h-12 text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -259,8 +284,8 @@ export default function Catalog() {
             ) : (
               <div className="text-center py-20 bg-secondary/20 rounded-lg">
                 <h3 className="text-xl font-medium text-muted-foreground">No products found matching your criteria.</h3>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="mt-2 text-accent"
                   onClick={resetFilters}
                 >

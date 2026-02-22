@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/currency";
 
 export default function Cart() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, loading: authLoading } = useAuth();
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -81,7 +81,7 @@ export default function Cart() {
                   <div className="col-span-2 text-center">Quantity (MT)</div>
                   <div className="col-span-2 text-right">Total</div>
                 </div>
-                
+
                 <div className="divide-y divide-border">
                   {cart.map((item) => (
                     <div key={item.product.id} className="p-4">
@@ -98,9 +98,9 @@ export default function Cart() {
                               {formatPrice(item.product.price)} / MT
                             </div>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
                             onClick={() => handleRemoveFromCart(item.product.id)}
                           >
@@ -110,9 +110,9 @@ export default function Cart() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-sm">Quantity:</span>
-                            <Input 
-                              type="number" 
-                              value={item.quantity} 
+                            <Input
+                              type="number"
+                              value={item.quantity}
                               onChange={(e) => handleUpdateQuantity(item.product.id, Number(e.target.value))}
                               className="w-20 text-center h-8"
                             />
@@ -140,18 +140,18 @@ export default function Cart() {
                           {formatPrice(item.product.price)}
                         </div>
                         <div className="col-span-2 flex justify-center">
-                           <Input 
-                            type="number" 
-                            value={item.quantity} 
+                          <Input
+                            type="number"
+                            value={item.quantity}
                             onChange={(e) => handleUpdateQuantity(item.product.id, Number(e.target.value))}
                             className="w-16 text-center h-8"
-                           />
+                          />
                         </div>
                         <div className="col-span-2 flex items-center justify-end gap-4">
                           <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             onClick={() => handleRemoveFromCart(item.product.id)}
                           >
@@ -169,7 +169,7 @@ export default function Cart() {
                 <p className="text-sm text-muted-foreground mt-2">Browse our products and add items to get started.</p>
               </div>
             )}
-            
+
             <Link href="/catalog">
               <Button variant="link" className="px-0 text-accent">
                 <ArrowRight className="mr-2 h-4 w-4 rotate-180" /> Continue Browsing Catalog
@@ -181,7 +181,7 @@ export default function Cart() {
           <div className="w-full lg:w-96 shrink-0">
             <div className="bg-white rounded-lg border border-border shadow-sm p-4 md:p-6 lg:sticky lg:top-24">
               <h3 className="font-serif text-xl font-bold text-primary mb-6">Estimated Cost</h3>
-              
+
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal (Goods)</span>
@@ -195,25 +195,34 @@ export default function Cart() {
                   <span className="text-muted-foreground">Tax / Duty</span>
                   <span className="font-medium text-muted-foreground italic text-xs">Calculated at checkout</span>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex justify-between items-end">
                   <span className="font-bold text-primary text-lg">Est. Total</span>
                   <span className="font-bold text-primary text-xl md:text-2xl">{formatPrice(total)}</span>
                 </div>
-                
+
                 <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
                   *Final pricing including freight (CIF) will be confirmed by our sales team within 24 hours of inquiry submission.
                 </p>
-                
-                <Button 
-                  size="lg" 
+
+                <Button
+                  size="lg"
                   className="w-full bg-accent hover:bg-accent/90 text-white mt-6"
                   onClick={handleCheckout}
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || authLoading}
                 >
-                  {isLoggedIn ? "Proceed to Inquiry" : "Login to Checkout"}
+                  {authLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Verifying Account...
+                    </div>
+                  ) : isLoggedIn ? (
+                    "Proceed to Inquiry"
+                  ) : (
+                    "Login to Checkout"
+                  )}
                 </Button>
               </div>
             </div>

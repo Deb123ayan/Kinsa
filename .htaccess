@@ -1,0 +1,19 @@
+# Prevent Directory Browsing
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # --- SECURITY: Prohibit Path Traversal Attacks ---
+  # Blocks any request containing '../' in the URI or Query String
+  RewriteCond %{QUERY_STRING} \.\.\/ [NC,OR]
+  RewriteCond %{REQUEST_URI} \.\.\/ [NC]
+  RewriteRule ^.*$ - [F,L]
+
+  # --- SPA ROUTING: Map all paths to index.html ---
+  # This allows React/Wouter to handle the "product name" URLs
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>

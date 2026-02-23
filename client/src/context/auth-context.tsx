@@ -49,19 +49,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const syncAuthState = async (currentSession: Session | null) => {
       const savedAdmin = localStorage.getItem('kinsa_admin');
+      let isActuallyAdmin = false;
 
       if (currentSession?.user) {
         setSession(currentSession);
         setUser(currentSession.user);
-        await checkAdminStatus(currentSession.user.id);
-      } else if (savedAdmin) {
-        const adminData = JSON.parse(savedAdmin);
-        setIsAdmin(true);
-        setUser({ email: adminData.email, id: adminData.user_id } as any);
-        setSession(null);
+        isActuallyAdmin = await checkAdminStatus(currentSession.user.id);
       } else {
         setSession(null);
         setUser(null);
+      }
+
+      // Determine final admin status: either via DB check or local token
+      if (isActuallyAdmin) {
+        setIsAdmin(true);
+      } else if (savedAdmin) {
+        try {
+          const adminData = JSON.parse(savedAdmin);
+          setIsAdmin(true);
+          // If no user set via session, use admin data
+          if (!currentSession?.user) {
+            setUser({ email: adminData.email, id: adminData.user_id } as any);
+          }
+        } catch (e) {
+          console.error("Failed to parse saved admin data");
+          setIsAdmin(false);
+          localStorage.removeItem('kinsa_admin');
+        }
+      } else {
         setIsAdmin(false);
       }
 

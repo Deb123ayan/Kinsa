@@ -1,0 +1,28 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent path traversal attacks (Directory Traversal / LFI)
+    # Block requests containing ../ or ..\
+    RewriteCond %{REQUEST_URI} (\.\./|\.\.\\) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\.\./|\.\.\\) [NC]
+    RewriteRule .* - [F,L]
+
+    # Block access to hidden files/directories (like .env, .git)
+    RewriteRule "(^|/)\." - [F,L]
+
+    # Protect the Admin Panel Route
+    # Require specific IP address to access /admin
+    RewriteCond %{REQUEST_URI} ^/admin [NC]
+    # Allow ONLY this specific IP
+    RewriteCond %{REMOTE_ADDR} !=49.47.154.121
+    # If the route is /admin and the IP is NOT the one above, return 403 Forbidden
+    RewriteRule ^(.*)$ - [F,L]
+    
+    # Standard SPA routing (redirect all non-file/dir requests to index.html)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes

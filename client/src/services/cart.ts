@@ -15,6 +15,19 @@ export interface DatabaseCartItem {
   user_id: string | null;
 }
 
+// In-Memory Cache (Cache-Aside Pattern)
+const CART_CACHE = {
+  data: null as CartItem[] | null,
+  lastFetched: 0,
+  TTL_MS: 5 * 60 * 1000 // 5 minutes TTL
+};
+
+// Helper to invalidate cache
+function invalidateCartCache() {
+  CART_CACHE.data = null;
+  CART_CACHE.lastFetched = 0;
+}
+
 export async function saveCartItem(item: CartItem): Promise<{ success: boolean; error?: string }> {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -75,6 +88,7 @@ export async function saveCartItem(item: CartItem): Promise<{ success: boolean; 
     }
 
     console.log('Successfully saved cart item to database');
+    invalidateCartCache(); // Invalidate cache on write
     return { success: true };
   } catch (error) {
     console.error('Error in saveCartItem:', error);
@@ -88,6 +102,13 @@ export async function fetchCartItems(): Promise<CartItem[]> {
     if (userError || !user) {
       console.log('User not authenticated, returning empty cart');
       return [];
+    }
+
+    // Implement Cache-Aside pattern
+    const now = Date.now();
+    if (CART_CACHE.data && (now - CART_CACHE.lastFetched < CART_CACHE.TTL_MS)) {
+      console.log('Returning cart items from in-memory cache (Cache-Aside)');
+      return CART_CACHE.data;
     }
 
     console.log('Fetching cart items for user:', user.email);
@@ -105,7 +126,7 @@ export async function fetchCartItems(): Promise<CartItem[]> {
 
     console.log('Fetched cart items from database:', data?.length || 0, 'items');
 
-    return (data || []).map((item: DatabaseCartItem) => ({
+    const formattedItems = (data || []).map((item: DatabaseCartItem) => ({
       product: {
         id: item.products.id,
         name: item.products.name,
@@ -121,6 +142,12 @@ export async function fetchCartItems(): Promise<CartItem[]> {
       },
       quantity: item.products.quantity || 1
     }));
+    
+    // Store in cache
+    CART_CACHE.data = formattedItems;
+    CART_CACHE.lastFetched = Date.now();
+    
+    return formattedItems;
   } catch (error) {
     console.error('Failed to fetch cart items:', error);
     return [];
@@ -170,6 +197,7 @@ export async function removeCartItem(productId: string): Promise<{ success: bool
     }
 
     console.log('Successfully removed cart item from database');
+    invalidateCartCache(); // Invalidate cache on delete
     return { success: true };
   } catch (error) {
     console.error('Error in removeCartItem:', error);
@@ -219,6 +247,7 @@ export async function updateCartItemQuantity(productId: string, quantity: number
     }
 
     console.log('Successfully updated cart item quantity in database');
+    invalidateCartCache(); // Invalidate cache on update
     return { success: true };
   } catch (error) {
     console.error('Error in updateCartItemQuantity:', error);
@@ -246,6 +275,7 @@ export async function clearCart(): Promise<{ success: boolean; error?: string }>
     }
 
     console.log('Successfully cleared cart from database');
+    invalidateCartCache(); // Invalidate cache on clear
     return { success: true };
   } catch (error) {
     console.error('Error in clearCart:', error);

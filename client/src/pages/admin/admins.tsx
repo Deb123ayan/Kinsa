@@ -74,7 +74,10 @@ function AdminManagement() {
     const fetchAdmins = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.rpc('get_admin_roster');
+            const adminData = JSON.parse(localStorage.getItem('kinsa_admin') || '{}');
+            const { data, error } = await supabase.rpc('get_admin_roster', {
+                p_caller_id: adminData.id
+            });
 
             if (error) throw error;
             setAdmins(data || []);
@@ -100,7 +103,9 @@ function AdminManagement() {
 
         setIsProcessing(true);
         try {
+            const adminData = JSON.parse(localStorage.getItem('kinsa_admin') || '{}');
             const { data, error } = await supabase.rpc('provision_new_admin', {
+                p_caller_id: adminData.id,
                 p_email: formData.email,
                 p_password: formData.password
             });
@@ -130,7 +135,9 @@ function AdminManagement() {
         if (!newPassword) return;
         setIsProcessing(true);
         try {
+            const adminData = JSON.parse(localStorage.getItem('kinsa_admin') || '{}');
             const { data, error } = await supabase.rpc('reset_admin_password', {
+                p_caller_id: adminData.id,
                 p_admin_id: resetDialog.adminId,
                 p_new_password: newPassword
             });
@@ -159,7 +166,9 @@ function AdminManagement() {
         if (!confirm(`Are you sure you want to revoke access for ${email}?`)) return;
 
         try {
+            const adminData = JSON.parse(localStorage.getItem('kinsa_admin') || '{}');
             const { error } = await supabase.rpc('purge_admin_credential', {
+                p_caller_id: adminData.id,
                 p_admin_id: id
             });
 

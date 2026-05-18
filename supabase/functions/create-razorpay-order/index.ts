@@ -58,6 +58,22 @@ serve(async (req: Request) => {
       });
     }
 
+    // ✅ Rate Limiting via Supabase Postgres (Max 10 orders per minute per user)
+    const { data: isAllowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_ip: `razorpay_user_${user.id}`,
+      p_max_points: 10,
+      p_reset_seconds: 60 
+    });
+
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+    } else if (isAllowed === false) {
+      return new Response(JSON.stringify({ error: "Too many payment orders created. Please try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ✅ Parse request body
     const { amount, currency = "INR", receipt, notes } = await req.json();
 

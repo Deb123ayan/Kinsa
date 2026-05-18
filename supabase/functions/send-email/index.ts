@@ -36,6 +36,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiter (per isolate)
+const IP_RATE_LIMIT = new Map<string, { count: number, resetTime: number }>();
+const MAX_REQUESTS = 3; // Max 3 emails per minute per IP
+const RESET_INTERVAL_MS = 60 * 1000; // 1 minute
+
+// In-memory Idempotency Cache (per isolate)
+const IDEMPOTENCY_CACHE = new Map<string, { data: any, status: number, timestamp: number }>();
+const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -43,6 +52,38 @@ serve(async (req: Request) => {
   }
 
   try {
+    // 1. Rate Limiting Check
+    const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for") || "unknown";
+    const now = Date.now();
+    
+    if (clientIp !== "unknown") {
+      const record = IP_RATE_LIMIT.get(clientIp);
+      if (record && now < record.resetTime) {
+        if (record.count >= MAX_REQUESTS) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Too many requests. Please try again later." }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+          );
+        }
+        record.count++;
+      } else {
+        IP_RATE_LIMIT.set(clientIp, { count: 1, resetTime: now + RESET_INTERVAL_MS });
+      }
+    }
+
+    // 2. Idempotency Check
+    const idempotencyKey = req.headers.get("x-idempotency-key");
+    if (idempotencyKey) {
+      const cachedResponse = IDEMPOTENCY_CACHE.get(idempotencyKey);
+      if (cachedResponse && (now - cachedResponse.timestamp < IDEMPOTENCY_TTL_MS)) {
+        console.log(`Idempotency cache hit for key: ${idempotencyKey}`);
+        return new Response(JSON.stringify(cachedResponse.data), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: cachedResponse.status,
+        });
+      }
+    }
+
     const {
       to,
       subject,
@@ -111,16 +152,26 @@ serve(async (req: Request) => {
         },
       });
 
+      const devResponseData = {
+        success: true,
+        message: "Email logged successfully (development mode - configure SMTP_USER and SMTP_PASS to send emails)",
+        data: {
+          to: recipientEmail,
+          subject: emailSubject,
+          contactData,
+        },
+      };
+
+      if (idempotencyKey) {
+        IDEMPOTENCY_CACHE.set(idempotencyKey, {
+          data: devResponseData,
+          status: 200,
+          timestamp: Date.now()
+        });
+      }
+
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Email logged successfully (development mode - configure SMTP_USER and SMTP_PASS to send emails)",
-          data: {
-            to: recipientEmail,
-            subject: emailSubject,
-            contactData,
-          },
-        }),
+        JSON.stringify(devResponseData),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -149,16 +200,26 @@ serve(async (req: Request) => {
         replyTo: contactData.email, // Allow direct reply to the contact person
       });
 
+      const successResponseData = {
+        success: true,
+        message: "Email sent successfully via Nodemailer",
+        data: {
+          messageId: info.messageId,
+          to: recipientEmail,
+          subject: emailSubject,
+        },
+      };
+
+      if (idempotencyKey) {
+        IDEMPOTENCY_CACHE.set(idempotencyKey, {
+          data: successResponseData,
+          status: 200,
+          timestamp: Date.now()
+        });
+      }
+
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Email sent successfully via Nodemailer",
-          data: {
-            messageId: info.messageId,
-            to: recipientEmail,
-            subject: emailSubject,
-          },
-        }),
+        JSON.stringify(successResponseData),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,

@@ -68,15 +68,11 @@ export default function Auth() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <Button
+                onClick={handleGoogleSignIn}
+                className="w-full h-12 text-base bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm transition-transform hover:-translate-y-0.5"
+                disabled={loading}
               >
-                <Button
-                  onClick={handleGoogleSignIn}
-                  className="w-full h-12 text-base bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm"
-                  disabled={loading}
-                >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
@@ -97,7 +93,6 @@ export default function Auth() {
                   </svg>
                   {loading ? "Signing in..." : "Continue with Google"}
                 </Button>
-              </motion.div>
               
               <div className="text-center text-sm text-muted-foreground">
                 <p>By signing in, you agree to our Terms of Service and Privacy Policy.</p>

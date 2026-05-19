@@ -1,0 +1,12 @@
+1. Vector Database & AI Recommendation System (Vector_database & Recommendation_system)
+The Concept: Traditional search relies on exact keyword matches. Vector databases allow for "Semantic Search"—searching by meaning.
+How we apply it: We can enable the pgvector extension in your Supabase database. We would add an embedding vector(384) column to your Products table. We can then create a Postgres RPC function that calculates cosine similarity (<=>) to instantly power a "Similar Products" or "Customers also bought" recommendation widget on the frontend.
+2. Cursor-Based Pagination (Api_design & Database_system)
+The Concept: Standard LIMIT / OFFSET pagination gets exponentially slower the deeper you go into pages because the database still has to scan the offset rows.
+How we apply it: We can update your products and orders API fetching logic to use Cursor-Based Pagination. Instead of saying "skip 1000 rows," we tell the database "fetch 20 rows where ID > 1000". This guarantees O(1) query performance no matter how many orders or products you have.
+3. Edge HTTP Caching (Cache & Distributed_systems)
+The Concept: I see you have a robust MemoryCache built in React (client/src/utils/cache.ts). However, caching should also happen at the CDN layer.
+How we apply it: For your Supabase Edge Functions (like product catalog generation), we can implement Cache-Control: public, s-maxage=300, stale-while-revalidate=600 HTTP headers. This tells the edge network (like Vercel or Cloudflare) to cache the API response for 5 minutes globally, entirely eliminating database hits for read-heavy public routes.
+4. Containerization (Docker & Microservices)
+The Concept: "It works on my machine" syndrome.
+How we apply it: We can add a production-ready Dockerfile with a multi-stage build (using node to build and nginx to serve the static Vite files). We can also set up a docker-compose.yml to spin up your frontend alongside a local Supabase instance, mimicking a true microservice architecture setup.

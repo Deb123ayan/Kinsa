@@ -10,6 +10,7 @@ import { LanguageProvider } from "@/context/language-context";
 import { useLanguageDirection } from "@/hooks/use-language-direction";
 import React, { lazy, Suspense } from "react";
 import NotFound from "@/pages/not-found";
+import { IPGuard } from "@/components/ip-guard";
 
 const Home = lazy(() => import("@/pages/home"));
 const Catalog = lazy(() => import("@/pages/catalog"));
@@ -81,14 +82,42 @@ function Router() {
         <Route path="/shipping" component={() => <Legal slug="shipping" />} />
         <Route path="/track" component={() => <Legal slug="track" />} />
 
-        {/* Admin routes */}
-        <Route path="/admin/login" component={AdminLogin} />
-        <Route path="/admin" component={AdminDashboard} />
-        <Route path="/admin/orders" component={AdminOrders} />
-        <Route path="/admin/payments" component={AdminPayments} />
-        <Route path="/admin/products" component={AdminProducts} />
-        <Route path="/admin/contacts" component={AdminContacts} />
-        <Route path="/admin/management" component={AdminManagement} />
+        {/* Admin routes with secure IP whitelisting */}
+        <Route path="/admin/login">
+          <IPGuard>
+            <AdminLogin />
+          </IPGuard>
+        </Route>
+        <Route path="/admin">
+          <IPGuard>
+            <AdminDashboard />
+          </IPGuard>
+        </Route>
+        <Route path="/admin/orders">
+          <IPGuard>
+            <AdminOrders />
+          </IPGuard>
+        </Route>
+        <Route path="/admin/payments">
+          <IPGuard>
+            <AdminPayments />
+          </IPGuard>
+        </Route>
+        <Route path="/admin/products">
+          <IPGuard>
+            <AdminProducts />
+          </IPGuard>
+        </Route>
+        <Route path="/admin/contacts">
+          <IPGuard>
+            <AdminContacts />
+          </IPGuard>
+        </Route>
+        <Route path="/admin/management">
+          <IPGuard>
+            <AdminManagement />
+          </IPGuard>
+        </Route>
 
         <Route component={NotFound} />
       </Switch>

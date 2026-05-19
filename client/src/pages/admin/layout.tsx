@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
     LayoutDashboard,
@@ -13,9 +13,7 @@ import {
     ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -28,109 +26,111 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const menuItems = [
-        { href: "/admin", icon: LayoutDashboard, label: "OVERVIEW" },
-        { href: "/admin/orders", icon: ShoppingBag, label: "ORDERS" },
-        { href: "/admin/payments", icon: CreditCard, label: "PAYMENTS" },
-        { href: "/admin/products", icon: Box, label: "PRODUCTS" },
-        { href: "/admin/contacts", icon: MessageSquare, label: "CONTACTS" },
-        { href: "/admin/management", icon: Shield, label: "SEC_CONTROL" },
+        { href: "/admin", icon: LayoutDashboard, label: "Overview" },
+        { href: "/admin/orders", icon: ShoppingBag, label: "Orders" },
+        { href: "/admin/payments", icon: CreditCard, label: "Payments" },
+        { href: "/admin/products", icon: Box, label: "Products" },
+        { href: "/admin/contacts", icon: MessageSquare, label: "Contacts" },
+        { href: "/admin/management", icon: Shield, label: "Sec Control" },
     ];
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-white text-black border-r border-black/5 overflow-y-auto">
+        <div className="flex flex-col h-full bg-card text-foreground border-r border-border overflow-y-auto">
             <div className="p-6 lg:p-10 shrink-0">
                 <div className="flex items-center gap-3 mb-1">
-                    <div className="h-10 w-10 bg-black flex items-center justify-center">
-                        <span className="text-white font-serif font-black text-2xl">K</span>
+                    <div className="h-10 w-10 bg-primary flex items-center justify-center rounded-sm">
+                        <span className="text-primary-foreground font-serif font-black text-2xl">K</span>
                     </div>
-                    <span className="font-serif text-2xl font-black tracking-tighter">ADMIN</span>
+                    <span className="font-serif text-2xl font-black tracking-tight">ADMIN</span>
                 </div>
-                <p className="text-[9px] text-black/30 uppercase tracking-[0.3em] font-bold">Exim Trade Hub</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mt-2">Exim Trade Hub</p>
             </div>
 
-            <nav className="flex-1 mt-4">
+            <nav className="flex-1 mt-4 space-y-1 px-4">
                 {menuItems.map((item) => (
                     <Link key={item.href} href={item.href}>
                         <div
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={`
-                            flex items-center gap-3 lg:gap-4 px-6 lg:px-10 py-4 lg:py-5 cursor-pointer transition-all duration-300 group
+                            flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-300 rounded-md group
                             ${location === item.href
-                                    ? "bg-black/5 text-black border-r-4 border-black"
-                                    : "text-black/40 hover:text-black hover:bg-black/5"
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                                 }
-                        `}>
-                            <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location === item.href ? "text-black" : "text-black/30 group-hover:text-black"}`} />
-                            <span className={`text-[11px] font-black tracking-[0.15em]`}>{item.label}</span>
-                            {location === item.href && <ChevronRight className="ml-auto h-3 w-3 text-black" />}
+                        `}
+                        >
+                            <item.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location === item.href ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
+                            <span className="text-sm font-medium tracking-wide">{item.label}</span>
+                            {location === item.href && <ChevronRight className="ml-auto h-4 w-4 text-primary-foreground" />}
                         </div>
                     </Link>
                 ))}
             </nav>
 
-            <div className="p-6 lg:p-8 border-t border-black/5 bg-gradient-to-b from-transparent to-black/5 mt-auto">
-                <div className="flex items-center gap-3 mb-6 px-1">
-                    <div className="h-10 w-10 border border-black/5 flex items-center justify-center bg-white shadow-sm overflow-hidden shrink-0">
-                        <span className="text-black font-serif font-black text-lg opacity-30">{user?.email?.[0].toUpperCase()}</span>
+            <div className="p-6 lg:p-8 border-t border-border bg-card mt-auto">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 border border-border flex items-center justify-center bg-secondary rounded-full overflow-hidden shrink-0">
+                        <span className="text-foreground font-serif font-bold text-lg">{user?.email?.[0].toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-black truncate text-black">{user?.email}</p>
-                        <p className="text-[8px] text-black/30 uppercase tracking-widest font-bold">System Admin</p>
+                        <p className="text-sm font-semibold truncate text-foreground">{user?.email}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">System Admin</p>
                     </div>
                 </div>
-                <Button
-                    variant="ghost"
-                    className="w-full border border-black text-black/40 hover:bg-black hover:text-white rounded-none h-12 transition-all group tracking-widest font-black text-[10px] uppercase"
+                <button
+                    className="btn btn-ghost w-full justify-start"
                     onClick={() => logout()}
                 >
-                    <LogOut className="mr-3 h-4 w-4 group-hover:rotate-45 transition-transform" />
+                    <LogOut className="mr-3 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                     Term. Session
-                </Button>
+                </button>
             </div>
         </div>
     );
 
     return (
-        <div className="flex h-screen bg-[#F5F5F5] text-black font-sans selection:bg-black selection:text-white">
+        <div className="flex h-screen bg-background text-foreground font-sans">
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex w-64 flex-col z-20">
+            <aside className="hidden lg:flex w-72 flex-col z-20">
                 <SidebarContent />
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-white via-[#F9F9F9] to-[#F0F0F0]">
+            <main className="flex-1 flex flex-col overflow-hidden bg-background">
                 {/* Header */}
-                <header className="h-16 lg:h-24 border-b border-black/5 flex items-center justify-between px-4 lg:px-16 bg-white/50 backdrop-blur-md z-10 shrink-0">
+                <header className="h-20 border-b border-border flex items-center justify-between px-6 lg:px-10 bg-card/80 backdrop-blur-md z-10 shrink-0 sticky top-0">
                     <div className="flex items-center gap-4">
                         <div className="lg:hidden">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                                 <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-black hover:text-white rounded-none border border-black/10">
+                                    <button className="btn btn-ghost p-2 h-10 w-10">
                                         <Menu className="h-5 w-5" />
-                                    </Button>
+                                    </button>
                                 </SheetTrigger>
-                                <SheetContent side="left" className="p-0 w-64 border-r-4 border-black transition-transform duration-500 ease-in-out">
+                                <SheetContent side="left" className="p-0 w-72 border-r border-border transition-transform duration-500 ease-in-out">
                                     <SidebarContent />
                                 </SheetContent>
                             </Sheet>
                         </div>
-                        <div className="hidden lg:block w-1.5 h-12 bg-black" />
-                        <h1 className="font-serif text-xl lg:text-3xl font-black uppercase tracking-tighter">{title}</h1>
+                        <div className="hidden lg:block w-1 h-8 bg-primary rounded-full" />
+                        <h1 className="font-serif text-2xl lg:text-3xl font-bold tracking-tight">{title}</h1>
                     </div>
                     <div className="flex items-center gap-4 lg:gap-8">
                         <div className="text-right hidden sm:block">
-                            <p className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] font-black text-black/20 mb-1 leading-none">Global Sync Active</p>
-                            <p className="text-[10px] lg:text-[11px] font-black text-black uppercase">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' })}</p>
+                            <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-1">Global Sync Active</p>
+                            <p className="text-sm font-medium text-foreground">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' })}</p>
                         </div>
-                        <div className="h-3 w-3 border border-black flex items-center justify-center animate-pulse">
-                            <div className="h-1 w-1 bg-black" />
+                        <div className="h-3 w-3 border border-primary rounded-full flex items-center justify-center animate-pulse">
+                            <div className="h-1.5 w-1.5 bg-primary rounded-full" />
                         </div>
                     </div>
                 </header>
 
                 {/* Page Area */}
-                <div className="flex-1 overflow-y-auto p-4 lg:p-16 custom-scrollbar">
-                    {children}
+                <div className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar">
+                    <div className="container animate-fade-in">
+                        {children}
+                    </div>
                 </div>
             </main>
         </div>

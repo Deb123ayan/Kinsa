@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
 import { Search, Filter } from "lucide-react";
 import { fetchProducts, type Product } from "@/services/products";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 // Debounce hook for performance optimization
 function useDebounce<T>(value: T, delay: number): T {
@@ -274,13 +276,28 @@ export default function Catalog() {
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredProducts.map(product => (
-                  <div key={product.id} onClick={() => handleProductClick(product.id)} className="cursor-pointer">
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
+              <motion.div 
+                layout
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredProducts.map(product => (
+                    <motion.div 
+                      layout
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.3 }}
+                      key={product.id} 
+                      onClick={() => handleProductClick(product.id)} 
+                      className="cursor-pointer"
+                    >
+                      <ProductCard product={product} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+
             ) : (
               <div className="text-center py-20 bg-secondary/20 rounded-lg">
                 <h3 className="text-xl font-medium text-muted-foreground">No products found matching your criteria.</h3>

@@ -61,21 +61,21 @@ export default function Cart() {
     setLocation("/checkout");
   };
 
-  const estimatedShipping = 5000; // Reduced for testing (₹50 instead of ₹1200)
+  const estimatedShipping = 5000;
   const total = cartTotal + estimatedShipping;
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
-        <h1 className="font-serif text-3xl font-bold text-primary mb-8">Quote Inquiry / Cart</h1>
+        <h1 className="display text-4xl font-bold text-foreground mb-8">Quote Inquiry / Cart</h1>
 
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Cart Items List */}
           <div className="flex-1 space-y-6">
             {cart.length > 0 ? (
-              <div className="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+              <div className="card-elite p-0 overflow-hidden">
                 {/* Desktop Header */}
-                <div className="hidden md:block p-4 bg-secondary/30 border-b border-border font-medium text-sm grid grid-cols-12 gap-4">
+                <div className="hidden md:grid grid-cols-12 gap-4 p-4 bg-secondary border-b border-border font-bold text-xs uppercase tracking-widest text-muted-foreground">
                   <div className="col-span-6">Product</div>
                   <div className="col-span-2 text-center">Price</div>
                   <div className="col-span-2 text-center">Quantity (MT)</div>
@@ -84,79 +84,75 @@ export default function Cart() {
 
                 <div className="divide-y divide-border">
                   {cart.map((item) => (
-                    <div key={item.product.id} className="p-4">
+                    <div key={item.product.id} className="p-4 md:p-6 hover:bg-secondary/20 transition-colors">
                       {/* Mobile Layout */}
                       <div className="md:hidden space-y-4">
                         <div className="flex gap-4">
-                          <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
+                          <div className="h-20 w-20 bg-secondary rounded-lg overflow-hidden shrink-0 border border-border">
                             <img src={item.product.image} alt="" className="h-full w-full object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-primary truncate">{item.product.name}</h4>
-                            <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
-                            <div className="text-sm font-medium text-primary mt-1">
+                            <h4 className="font-serif font-bold text-lg text-foreground truncate leading-tight mb-1">{item.product.name}</h4>
+                            <span className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Grade: {item.product.specs.grade}</span>
+                            <div className="text-sm font-bold text-accent mt-2">
                               {formatPrice(item.product.price)} / MT
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                          <button
+                            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors shrink-0"
                             onClick={() => handleRemoveFromCart(item.product.id)}
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </button>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">Quantity:</span>
-                            <Input
+                        <div className="flex items-center justify-between pt-2 border-t border-border">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Qty:</span>
+                            <input
                               type="number"
                               value={item.quantity}
                               onChange={(e) => handleUpdateQuantity(item.product.id, Number(e.target.value))}
-                              className="w-20 text-center h-8"
+                              className="form-input w-24 text-center h-10 px-2"
                             />
-                            <span className="text-sm text-muted-foreground">MT</span>
+                            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">MT</span>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm text-muted-foreground">Total</div>
-                            <div className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total</div>
+                            <div className="font-bold text-lg text-foreground">{formatPrice(item.product.price * item.quantity)}</div>
                           </div>
                         </div>
                       </div>
 
                       {/* Desktop Layout */}
                       <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-6 flex gap-4">
-                          <div className="h-16 w-16 bg-secondary rounded-md overflow-hidden shrink-0">
+                        <div className="col-span-6 flex gap-6">
+                          <div className="h-20 w-20 bg-secondary rounded-lg overflow-hidden shrink-0 border border-border">
                             <img src={item.product.image} alt="" className="h-full w-full object-cover" />
                           </div>
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-primary">{item.product.name}</h4>
-                            <span className="text-xs text-muted-foreground">Grade: {item.product.specs.grade}</span>
+                          <div className="min-w-0 flex flex-col justify-center">
+                            <h4 className="font-serif font-bold text-lg text-foreground truncate mb-1">{item.product.name}</h4>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Grade: {item.product.specs.grade}</span>
                           </div>
                         </div>
-                        <div className="col-span-2 text-center text-sm">
+                        <div className="col-span-2 text-center font-bold text-accent">
                           {formatPrice(item.product.price)}
                         </div>
                         <div className="col-span-2 flex justify-center">
-                          <Input
+                          <input
                             type="number"
                             value={item.quantity}
                             onChange={(e) => handleUpdateQuantity(item.product.id, Number(e.target.value))}
-                            className="w-16 text-center h-8"
+                            className="form-input w-20 text-center"
                           />
                         </div>
-                        <div className="col-span-2 flex items-center justify-end gap-4">
-                          <span className="font-bold text-primary">{formatPrice(item.product.price * item.quantity)}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        <div className="col-span-2 flex items-center justify-end gap-6">
+                          <span className="font-bold text-lg text-foreground">{formatPrice(item.product.price * item.quantity)}</span>
+                          <button
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10 flex items-center justify-center rounded-full transition-colors"
                             onClick={() => handleRemoveFromCart(item.product.id)}
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -164,57 +160,56 @@ export default function Cart() {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-20 bg-secondary/20 rounded-lg">
-                <h3 className="text-xl font-medium text-muted-foreground">Your cart is empty</h3>
-                <p className="text-sm text-muted-foreground mt-2">Browse our products and add items to get started.</p>
+              <div className="text-center py-32 card-elite border border-border">
+                <h3 className="font-serif text-2xl font-bold text-foreground mb-4">Your cart is empty</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto">Browse our commodities and add items to your quote inquiry to get started.</p>
               </div>
             )}
 
             <Link href="/catalog">
-              <Button variant="link" className="px-0 text-accent">
+              <button className="btn btn-ghost mt-4">
                 <ArrowRight className="mr-2 h-4 w-4 rotate-180" /> Continue Browsing Catalog
-              </Button>
+              </button>
             </Link>
           </div>
 
           {/* Summary */}
           <div className="w-full lg:w-96 shrink-0">
-            <div className="bg-white rounded-lg border border-border shadow-sm p-4 md:p-6 lg:sticky lg:top-24">
-              <h3 className="font-serif text-xl font-bold text-primary mb-6">Estimated Cost</h3>
+            <div className="card-elite p-6 md:p-8 lg:sticky lg:top-32 transition-transform duration-300">
+              <h3 className="font-serif text-2xl font-bold text-foreground mb-8">Estimated Cost</h3>
 
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal (Goods)</span>
-                  <span className="font-medium text-primary">{formatPrice(cartTotal)}</span>
+              <div className="space-y-6 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Subtotal (Goods)</span>
+                  <span className="font-bold text-foreground">{formatPrice(cartTotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Est. Shipping (FOB)</span>
-                  <span className="font-medium text-primary">{formatPrice(estimatedShipping)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Est. Shipping (FOB)</span>
+                  <span className="font-bold text-foreground">{formatPrice(estimatedShipping)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax / Duty</span>
-                  <span className="font-medium text-muted-foreground italic text-xs">Calculated at checkout</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Tax / Duty</span>
+                  <span className="font-bold text-accent italic text-[10px]">Calculated at checkout</span>
                 </div>
 
-                <Separator />
+                <div className="h-px bg-border my-6" />
 
                 <div className="flex justify-between items-end">
-                  <span className="font-bold text-primary text-lg">Est. Total</span>
-                  <span className="font-bold text-primary text-xl md:text-2xl">{formatPrice(total)}</span>
+                  <span className="font-bold text-foreground uppercase tracking-widest text-sm">Est. Total</span>
+                  <span className="font-serif font-bold text-accent text-2xl md:text-3xl">{formatPrice(total)}</span>
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-6 leading-relaxed bg-secondary p-4 rounded-lg border border-border">
                   *Final pricing including freight (CIF) will be confirmed by our sales team within 24 hours of inquiry submission.
                 </p>
 
-                <Button
-                  size="lg"
-                  className="w-full bg-accent hover:bg-accent/90 text-white mt-6"
+                <button
+                  className="btn btn-primary w-full h-16 text-sm uppercase tracking-widest shadow-xl mt-8"
                   onClick={handleCheckout}
                   disabled={cart.length === 0 || authLoading}
                 >
                   {authLoading ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       Verifying Account...
                     </div>
@@ -223,7 +218,7 @@ export default function Cart() {
                   ) : (
                     "Login to Checkout"
                   )}
-                </Button>
+                </button>
               </div>
             </div>
           </div>

@@ -12,16 +12,12 @@ import {
     X,
     Lock,
     Loader2,
-    RefreshCw,
     Wand2,
     Eye,
-    EyeOff,
-    Check
+    EyeOff
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
     Dialog,
     DialogContent,
@@ -190,69 +186,69 @@ function AdminManagement() {
 
     return (
         <AdminLayout title="Security Control">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-16 border-b border-black/5 pb-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-12 border-b border-border pb-8">
                 <div>
-                    <h2 className="text-3xl lg:text-5xl font-serif text-black font-black uppercase tracking-tighter leading-none mb-4">Administrators</h2>
-                    <p className="text-[9px] lg:text-[10px] uppercase font-black tracking-[0.4em] opacity-30">Manage users with system-level clearance</p>
+                    <h2 className="display text-primary mb-2">Administrators</h2>
+                    <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground">Manage users with system-level clearance</p>
                 </div>
 
                 <Sheet open={isAdding} onOpenChange={setIsAdding}>
                     <SheetTrigger asChild>
-                        <Button className="w-full lg:w-auto bg-black text-white rounded-none border border-black hover:bg-zinc-800 font-black uppercase tracking-widest text-[10px] h-14 px-10 transition-all shadow-md">
-                            <Plus className="mr-3 h-4 w-4" /> Provision Admin
-                        </Button>
+                        <button className="btn btn-primary shadow-lg animate-fade-in">
+                            <Plus className="mr-2 h-4 w-4" /> Provision Admin
+                        </button>
                     </SheetTrigger>
-                    <SheetContent className="w-full sm:max-w-md border-l border-black/5 p-0">
-                        <div className="h-full flex flex-col bg-white">
-                            <div className="p-8 border-b border-black/5 bg-zinc-50 text-black flex justify-between items-center">
-                                <h3 className="font-serif text-2xl font-black uppercase tracking-tighter">New Credentials</h3>
-                                <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)} className="text-black/40 hover:text-black">
+                    <SheetContent side="right" className="w-full sm:max-w-md border-l border-border p-0 bg-card text-foreground">
+                        <div className="h-full flex flex-col">
+                            <div className="p-8 border-b border-border bg-secondary flex justify-between items-center">
+                                <h3 className="font-serif text-2xl font-bold tracking-tight">New Credentials</h3>
+                                <button onClick={() => setIsAdding(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                     <X className="h-6 w-6" />
-                                </Button>
+                                </button>
                             </div>
 
-                            <form onSubmit={handleCreateAdmin} className="flex-1 p-8 lg:p-10 space-y-10 overflow-y-auto">
-                                <div className="space-y-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Identity_Email</label>
+                            <form onSubmit={handleCreateAdmin} className="flex-1 p-8 space-y-8 overflow-y-auto">
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Identity Email</label>
                                         <div className="relative">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 opacity-20" />
-                                            <Input
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
                                                 type="email"
                                                 required
                                                 value={formData.email}
                                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                                 placeholder="admin@tradehub.com"
-                                                className="h-14 pl-12 border-b-2 border-black/10 rounded-none bg-zinc-50 font-black text-xs uppercase tracking-widest focus:border-black transition-all"
+                                                className="form-input pl-12"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-2">
                                         <div className="flex justify-between items-end">
-                                            <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Secret_Access_Key</label>
+                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Secret Access Key</label>
                                             <button
                                                 type="button"
                                                 onClick={generatePassword}
-                                                className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:opacity-100 opacity-30 transition-opacity"
+                                                className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
                                             >
-                                                <Wand2 className="h-3 w-3" /> Auto_Generate
+                                                <Wand2 className="h-3 w-3" /> Generate
                                             </button>
                                         </div>
                                         <div className="relative">
-                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 opacity-20" />
-                                            <Input
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
                                                 type={showPassword ? "text" : "password"}
                                                 required
                                                 value={formData.password}
                                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                                 placeholder="••••••••"
-                                                className="h-14 pl-12 pr-12 border-b-2 border-black/10 rounded-none bg-zinc-50 font-black text-xs tracking-[0.2em] focus:border-black transition-all"
+                                                className="form-input pl-12 pr-12 tracking-widest"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20 hover:opacity-100"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                             >
                                                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                             </button>
@@ -260,19 +256,19 @@ function AdminManagement() {
                                     </div>
                                 </div>
 
-                                <div className="p-6 bg-zinc-50 border border-black/5">
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-40 leading-relaxed">
-                                        WARNING: Provisioning an administrator grants full system access. Use high-entropy security protocols.
+                                <div className="p-4 bg-secondary border border-border rounded-lg">
+                                    <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                                        <strong className="text-foreground">WARNING:</strong> Provisioning an administrator grants full system access. Use high-entropy security protocols.
                                     </p>
                                 </div>
 
-                                <Button
+                                <button
                                     type="submit"
                                     disabled={isProcessing}
-                                    className="w-full h-16 bg-black text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-none hover:bg-zinc-800 transition-all shadow-lg disabled:opacity-50"
+                                    className="btn btn-primary w-full h-14 text-sm tracking-widest shadow-md"
                                 >
                                     {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Authorize & Commit"}
-                                </Button>
+                                </button>
                             </form>
                         </div>
                     </SheetContent>
@@ -280,55 +276,51 @@ function AdminManagement() {
             </div>
 
             {/* Admin Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 stagger">
                 {loading ? (
                     <div className="col-span-full py-32 text-center">
-                        <div className="h-0.5 bg-black/5 w-48 mx-auto relative overflow-hidden">
-                            <div className="absolute inset-0 bg-black/20 animate-progress-ind" />
-                        </div>
-                        <p className="mt-8 text-[9px] font-black uppercase tracking-widest opacity-20">Retrieving Security Roster...</p>
+                        <div className="skeleton h-2 w-48 mx-auto mb-6" />
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Retrieving Security Roster...</p>
                     </div>
                 ) : admins.length === 0 ? (
-                    <div className="col-span-full bg-white border border-black/5 p-40 text-center shadow-sm">
-                        <Shield className="h-16 w-16 mx-auto mb-8 opacity-5" />
-                        <p className="uppercase tracking-[0.3em] text-[10px] font-black opacity-20">No secondary administrators detected.</p>
+                    <div className="col-span-full card-elite p-32 text-center flex flex-col items-center justify-center">
+                        <Shield className="h-16 w-16 text-muted-foreground mb-6 opacity-50" />
+                        <p className="uppercase tracking-widest text-sm font-bold text-muted-foreground">No secondary administrators detected.</p>
                     </div>
                 ) : admins.map((admin) => (
-                    <div key={admin.id} className="bg-white border border-black/5 group hover:border-black transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.03)] relative overflow-hidden">
-                        <div className="absolute -right-8 -bottom-8 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity rotate-12">
-                            <Shield className="h-48 w-48" />
+                    <div key={admin.id} className="card-elite interactive relative overflow-hidden group">
+                        <div className="absolute -right-8 -bottom-8 opacity-5 group-hover:opacity-10 transition-opacity rotate-12 pointer-events-none">
+                            <Shield className="h-48 w-48 text-primary" />
                         </div>
 
-                        <div className="p-8 lg:p-10 relative z-10">
-                            <div className="flex justify-between items-start mb-8">
-                                <div className="h-14 w-14 lg:h-16 lg:w-16 border border-black/5 flex items-center justify-center bg-zinc-50 group-hover:bg-black group-hover:text-white transition-all">
-                                    <UserCircle className="h-6 w-6 lg:h-8 lg:w-8" />
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="h-14 w-14 border border-border flex items-center justify-center bg-secondary rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                                    <UserCircle className="h-6 w-6" />
                                 </div>
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30">Verified Admin</span>
+                                <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">Verified Admin</span>
                             </div>
 
-                            <div className="mb-10">
-                                <h3 className="text-lg lg:text-xl font-black uppercase tracking-tighter truncate mb-2 text-black/80">{admin.email}</h3>
-                                <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.1em] text-black/40">
+                            <div className="flex-1 mb-8">
+                                <h3 className="text-lg font-bold tracking-tight text-foreground truncate mb-2">{admin.email}</h3>
+                                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
                                     <Mail className="h-3 w-3" /> System Account
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 border-t border-black/5 pt-8 mt-4">
-                                <Button
-                                    variant="ghost"
+                            <div className="flex gap-3 border-t border-border pt-6">
+                                <button
                                     onClick={() => setResetDialog({ open: true, adminId: admin.id, email: admin.email })}
-                                    className="flex-1 border border-black/5 rounded-none h-12 text-[9px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all"
+                                    className="btn btn-ghost flex-1 text-xs tracking-widest"
                                 >
                                     <Key className="mr-2 h-3 w-3" /> Reset
-                                </Button>
-                                <Button
-                                    variant="ghost"
+                                </button>
+                                <button
                                     onClick={() => handleDeleteAdmin(admin.id, admin.email)}
-                                    className="border border-black/5 hover:bg-destructive hover:text-white rounded-none h-12 w-12 flex items-center justify-center transition-all"
+                                    className="btn btn-ghost border-error text-error hover:bg-error-bg px-4"
                                 >
                                     <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -337,65 +329,64 @@ function AdminManagement() {
 
             {/* Reset Password Dialog */}
             <Dialog open={resetDialog.open} onOpenChange={(val) => !val && setResetDialog({ ...resetDialog, open: false })}>
-                <DialogContent className="border border-black/10 rounded-none max-w-lg p-0 bg-white shadow-2xl">
-                    <div className="p-8 lg:p-10 space-y-10">
+                <DialogContent className="border border-border rounded-xl max-w-md p-0 bg-card shadow-2xl">
+                    <div className="p-8 space-y-8">
                         <DialogHeader>
-                            <DialogTitle className="font-serif text-3xl font-black uppercase tracking-tighter text-black">Credential Update</DialogTitle>
-                            <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                                Generate a new access key for <span className="text-black">{resetDialog.email}</span>
+                            <DialogTitle className="font-serif text-2xl font-bold tracking-tight">Credential Update</DialogTitle>
+                            <DialogDescription className="text-sm text-muted-foreground mt-2">
+                                Generate a new access key for <strong className="text-foreground">{resetDialog.email}</strong>
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4">
                             <div className="flex justify-between items-end px-1">
-                                <label className="text-[9px] font-black uppercase tracking-widest opacity-40">New Secret Key</label>
+                                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">New Secret Key</label>
                                 <button
                                     type="button"
                                     onClick={generatePassword}
-                                    className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:opacity-100 opacity-30 transition-opacity"
+                                    className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
                                 >
-                                    <Wand2 className="h-3 w-3" /> Auto_Generate
+                                    <Wand2 className="h-3 w-3" /> Generate
                                 </button>
                             </div>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 opacity-20" />
-                                <Input
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <input
                                     type={showPassword ? "text" : "password"}
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="h-14 pl-12 pr-12 border-b-2 border-black/10 rounded-none bg-zinc-50 font-black text-xs tracking-[0.5em] focus:border-black transition-all"
+                                    className="form-input pl-12 pr-12 tracking-[0.25em]"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20 hover:opacity-100"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                 >
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="p-6 bg-zinc-50 border border-black/5 space-y-3">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-black/80">Commit Changes?</p>
-                            <p className="text-[9px] opacity-40 leading-relaxed uppercase">Existing credentials will be invalidated. Ensure secure communication of new key.</p>
+                        <div className="p-4 bg-secondary border border-border rounded-lg">
+                            <p className="text-sm font-bold text-foreground mb-1">Commit Changes?</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">Existing credentials will be invalidated. Ensure secure communication of new key.</p>
                         </div>
 
-                        <DialogFooter className="flex-col sm:flex-row gap-3 pt-4">
-                            <Button
-                                variant="ghost"
+                        <DialogFooter className="flex gap-3">
+                            <button
                                 onClick={() => setResetDialog({ ...resetDialog, open: false })}
-                                className="border border-black/5 rounded-none h-14 font-black uppercase tracking-widest text-[9px] flex-1 sm:flex-none"
+                                className="btn btn-ghost flex-1 text-xs"
                             >
                                 Cancel
-                            </Button>
-                            <Button
+                            </button>
+                            <button
                                 onClick={handleResetPassword}
                                 disabled={isProcessing || !newPassword}
-                                className="flex-1 bg-black text-white hover:bg-zinc-800 border border-black rounded-none h-14 font-black uppercase tracking-widest text-[9px] shadow-lg"
+                                className="btn btn-primary flex-1 text-xs"
                             >
-                                {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Commit New Key"}
-                            </Button>
+                                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Commit Key"}
+                            </button>
                         </DialogFooter>
                     </div>
                 </DialogContent>

@@ -6,12 +6,8 @@ import {
     Search,
     Filter,
     MoreHorizontal,
-    Eye,
-    CheckCircle,
-    Clock
+    Eye
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/currency";
 import {
     Select,
@@ -94,87 +90,85 @@ function AdminOrders() {
 
     return (
         <AdminLayout title="Global Orders">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 lg:gap-8 mb-4 border-b border-black/5 pb-6">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 lg:gap-8 mb-8 border-b border-border pb-6">
                 <div className="relative w-full lg:w-[450px]">
-                    <Search className="absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 h-4 lg:h-5 w-4 lg:w-5 opacity-20" />
+                    <Search className="absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 h-4 lg:h-5 w-4 lg:w-5 text-muted-foreground" />
                     <input
                         placeholder="FILTER_LEDGER..."
-                        className="flex h-12 lg:h-14 w-full bg-white border border-black/5 rounded-none px-12 lg:px-16 py-2 text-[10px] lg:text-xs font-black tracking-widest focus:outline-none focus:border-black/20 shadow-sm"
+                        className="form-input w-full pl-12 lg:pl-16 text-xs"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-3 lg:gap-4 w-full sm:w-auto">
-                    <Button
+                <div className="flex gap-4 w-full sm:w-auto">
+                    <button
                         onClick={() => setIsFilterVisible(!isFilterVisible)}
-                        variant={isFilterVisible ? "default" : "outline"}
-                        className={`flex-1 sm:flex-none border border-black/10 font-black uppercase tracking-widest text-[9px] lg:text-[10px] rounded-none h-12 lg:h-14 px-6 lg:px-10 transition-all shadow-sm ${isFilterVisible ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}`}
+                        className={`btn h-14 px-8 text-xs ${isFilterVisible ? 'btn-primary' : 'btn-ghost border border-border'}`}
                     >
-                        <Filter className="mr-2 lg:mr-3 h-3.5 lg:h-4 w-3.5 lg:w-4" /> {isFilterVisible ? 'Hide Filters' : 'Advanced Filters'}
-                    </Button>
-                    <Button className="flex-1 sm:flex-none bg-black text-white font-black uppercase tracking-widest text-[9px] lg:text-[10px] rounded-none h-12 lg:h-14 px-6 lg:px-10 hover:bg-zinc-800 transition-all shadow-md">
+                        <Filter className="mr-3 h-4 w-4" /> {isFilterVisible ? 'Hide Filters' : 'Advanced Filters'}
+                    </button>
+                    <button className="btn btn-primary h-14 px-8 text-xs">
                         Export
-                    </Button>
+                    </button>
                 </div>
             </div>
 
             {isFilterVisible && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-zinc-50 border border-black/5 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-secondary border border-border rounded-xl mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Status</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</label>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="bg-white border-black/5 rounded-none h-10 text-[10px] font-black uppercase tracking-widest">
+                            <SelectTrigger className="form-input bg-card border-border h-11 text-xs uppercase tracking-wider">
                                 <SelectValue placeholder="All Statuses" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-none border-black/5">
-                                <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest">ALL_ENTRIES</SelectItem>
-                                <SelectItem value="confirmed" className="text-[10px] font-black uppercase tracking-widest">CONFIRMED</SelectItem>
-                                <SelectItem value="shipped" className="text-[10px] font-black uppercase tracking-widest">SHIPPED</SelectItem>
-                                <SelectItem value="in transit" className="text-[10px] font-black uppercase tracking-widest">IN_TRANSIT</SelectItem>
-                                <SelectItem value="cancelled" className="text-[10px] font-black uppercase tracking-widest">CANCELLED</SelectItem>
+                            <SelectContent className="rounded-xl border-border bg-card">
+                                <SelectItem value="all" className="text-xs uppercase font-bold tracking-wider">ALL_ENTRIES</SelectItem>
+                                <SelectItem value="confirmed" className="text-xs uppercase font-bold tracking-wider">CONFIRMED</SelectItem>
+                                <SelectItem value="shipped" className="text-xs uppercase font-bold tracking-wider">SHIPPED</SelectItem>
+                                <SelectItem value="in transit" className="text-xs uppercase font-bold tracking-wider">IN_TRANSIT</SelectItem>
+                                <SelectItem value="cancelled" className="text-xs uppercase font-bold tracking-wider">CANCELLED</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Date Range</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Date Range</label>
                         <div className="flex gap-2">
                             <input
                                 type="date"
-                                className="w-full bg-white border border-black/5 h-10 px-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-black/20"
+                                className="form-input h-11 text-xs px-3"
                                 value={dateFilter.from}
                                 onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
                             />
                             <input
                                 type="date"
-                                className="w-full bg-white border border-black/5 h-10 px-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-black/20"
+                                className="form-input h-11 text-xs px-3"
                                 value={dateFilter.to}
                                 onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
                             />
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40">Valuation Range (₹)</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valuation Range (₹)</label>
                         <div className="flex gap-2">
                             <input
                                 placeholder="MIN"
                                 type="number"
-                                className="w-full bg-white border border-black/5 h-10 px-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-black/20"
+                                className="form-input h-11 text-xs px-3"
                                 value={valuationFilter.min}
                                 onChange={(e) => setValuationFilter(prev => ({ ...prev, min: e.target.value }))}
                             />
                             <input
                                 placeholder="MAX"
                                 type="number"
-                                className="w-full bg-white border border-black/5 h-10 px-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-black/20"
+                                className="form-input h-11 text-xs px-3"
                                 value={valuationFilter.max}
                                 onChange={(e) => setValuationFilter(prev => ({ ...prev, max: e.target.value }))}
                             />
                         </div>
                     </div>
                     <div className="flex items-end">
-                        <Button
-                            variant="ghost"
-                            className="w-full h-10 text-[9px] font-black uppercase tracking-widest hover:bg-black hover:text-white rounded-none border border-black/5"
+                        <button
+                            className="btn btn-ghost w-full h-11 border border-border text-xs"
                             onClick={() => {
                                 setStatusFilter("all");
                                 setDateFilter({ from: "", to: "" });
@@ -183,97 +177,95 @@ function AdminOrders() {
                             }}
                         >
                             Reset Cluster Filters
-                        </Button>
+                        </button>
                     </div>
                 </div>
             )}
 
-            <div className="bg-white border border-black/5 shadow-sm mb-20">
+            <div className="card-elite p-0 overflow-hidden mb-20">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse min-w-[1000px]">
                         <thead>
-                            <tr className="bg-zinc-50 border-b border-black/5 text-black/40 uppercase text-[9px] lg:text-[10px] tracking-[0.2em] font-black">
-                                <th className="px-4 lg:px-8 py-4 lg:py-6">Date</th>
-                                <th className="px-4 lg:px-8 py-4 lg:py-6">Identifier</th>
-                                <th className="px-4 lg:px-8 py-4 lg:py-6">Counterparty</th>
-                                <th className="px-4 lg:px-8 py-4 lg:py-6">Port / Origin</th>
-                                <th className="px-4 lg:px-8 py-4 lg:py-6">Valuation</th>
-                                <th className="px-4 lg:px-8 py-4 lg:py-6">Status</th>
-                                <th className="px-4 lg:px-8 py-4 lg:py-6 text-right">Verification</th>
+                            <tr className="bg-secondary border-b border-border text-muted-foreground uppercase text-[10px] tracking-[0.2em] font-bold">
+                                <th className="px-6 lg:px-8 py-5">Date</th>
+                                <th className="px-6 lg:px-8 py-5">Identifier</th>
+                                <th className="px-6 lg:px-8 py-5">Counterparty</th>
+                                <th className="px-6 lg:px-8 py-5">Port / Origin</th>
+                                <th className="px-6 lg:px-8 py-5">Valuation</th>
+                                <th className="px-6 lg:px-8 py-5">Status</th>
+                                <th className="px-6 lg:px-8 py-5 text-right">Verification</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-black/5">
+                        <tbody className="divide-y divide-border">
                             {loading ? (
                                 <tr>
                                     <td colSpan={7} className="px-8 py-24 text-center">
-                                        <div className="h-0.5 bg-black/5 w-48 mx-auto relative overflow-hidden">
-                                            <div className="absolute inset-0 bg-black/20 animate-progress-ind" />
-                                        </div>
-                                        <p className="mt-8 text-[9px] font-black uppercase tracking-widest opacity-20">Accessing Secure Ledger...</p>
+                                        <div className="skeleton h-2 w-48 mx-auto rounded-full mb-4" />
+                                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Accessing Secure Ledger...</p>
                                     </td>
                                 </tr>
                             ) : orders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-8 py-24 text-center opacity-20 font-black uppercase tracking-widest text-xs">
+                                    <td colSpan={7} className="px-8 py-24 text-center text-muted-foreground font-bold uppercase tracking-widest text-xs">
                                         No transaction history detected in active cluster.
                                     </td>
                                 </tr>
                             ) : filteredOrders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-8 py-24 text-center opacity-20 font-black uppercase tracking-widest text-xs">
+                                    <td colSpan={7} className="px-8 py-24 text-center text-muted-foreground font-bold uppercase tracking-widest text-xs">
                                         No matching entries found through active filters.
                                     </td>
                                 </tr>
                             ) : filteredOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-zinc-50 transition-all duration-300 group cursor-default border-b border-black/5 last:border-0 opacity-100">
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6 text-[9px] lg:text-[10px] font-black tracking-widest text-black/40 whitespace-nowrap">
+                                <tr key={order.id} className="hover:bg-secondary/20 transition-all duration-300 group cursor-default border-b border-border last:border-0">
+                                    <td className="px-6 lg:px-8 py-5 text-xs font-bold tracking-widest text-muted-foreground whitespace-nowrap">
                                         {new Date(order.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6 text-[10px] lg:text-[11px] font-black uppercase tracking-tighter text-black/60 whitespace-nowrap">
+                                    <td className="px-6 lg:px-8 py-5 text-xs font-bold uppercase tracking-tighter text-foreground whitespace-nowrap">
                                         ID_{order.id.toString().padStart(6, '0')}
                                     </td>
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6">
-                                        <p className="text-xs lg:text-sm font-black uppercase tracking-tight text-black/80 whitespace-nowrap">{order.name}</p>
-                                        <p className="text-[8px] lg:text-[9px] opacity-30 uppercase font-bold tracking-widest whitespace-nowrap">{order.email}</p>
+                                    <td className="px-6 lg:px-8 py-5">
+                                        <p className="text-sm font-bold uppercase tracking-tight text-foreground whitespace-nowrap">{order.name}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest whitespace-nowrap mt-1">{order.email}</p>
                                     </td>
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6 text-[9px] lg:text-[10px] font-black uppercase text-black/40 whitespace-nowrap">
+                                    <td className="px-6 lg:px-8 py-5 text-xs font-bold uppercase text-muted-foreground whitespace-nowrap">
                                         {order.port} // {order.country}
                                     </td>
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6 font-black text-sm lg:text-base tracking-tighter text-black/80 whitespace-nowrap">
+                                    <td className="px-6 lg:px-8 py-5 font-bold text-sm lg:text-base tracking-tighter text-foreground whitespace-nowrap">
                                         {formatPrice(order.total_amount || 0)}
                                     </td>
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6">
+                                    <td className="px-6 lg:px-8 py-5">
                                         <Select
                                             defaultValue={order.status || 'confirmed'}
                                             onValueChange={(val) => handleStatusUpdate(order.id, val)}
                                         >
                                             <SelectTrigger className={`
-                                                h-8 w-fit min-w-[100px] border px-2 lg:px-3 py-0.5 lg:py-1 text-[8px] lg:text-[9px] font-black uppercase tracking-widest rounded-none shadow-none focus:ring-0
-                                                ${order.status === 'confirmed' ? "bg-green-50 text-green-700 border-green-200" :
-                                                    order.status === 'shipped' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                                        order.status === 'in transit' ? "bg-purple-50 text-purple-700 border-purple-200" :
-                                                            order.status === 'cancelled' ? "bg-red-50 text-red-700 border-red-200" :
-                                                                "bg-zinc-50 text-black/40 border-black/5"
+                                                h-9 w-fit min-w-[120px] border px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full shadow-none focus:ring-0
+                                                ${order.status === 'confirmed' ? "bg-success-bg text-success border-success/20" :
+                                                    order.status === 'shipped' ? "bg-info-bg text-info border-info/20" :
+                                                        order.status === 'in transit' ? "bg-warning-bg text-warning border-warning/20" :
+                                                            order.status === 'cancelled' ? "bg-error-bg text-error border-error/20" :
+                                                                "bg-secondary text-muted-foreground border-border"
                                                 }
                                             `}>
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-none border-black/5">
-                                                <SelectItem value="confirmed" className="text-[9px] font-black uppercase tracking-widest">CONFIRMED</SelectItem>
-                                                <SelectItem value="shipped" className="text-[9px] font-black uppercase tracking-widest">SHIPPED</SelectItem>
-                                                <SelectItem value="in transit" className="text-[9px] font-black uppercase tracking-widest">IN_TRANSIT</SelectItem>
-                                                <SelectItem value="cancelled" className="text-[9px] font-black uppercase tracking-widest">CANCELLED</SelectItem>
+                                            <SelectContent className="rounded-xl border-border bg-card">
+                                                <SelectItem value="confirmed" className="text-[10px] font-bold uppercase tracking-widest">CONFIRMED</SelectItem>
+                                                <SelectItem value="shipped" className="text-[10px] font-bold uppercase tracking-widest">SHIPPED</SelectItem>
+                                                <SelectItem value="in transit" className="text-[10px] font-bold uppercase tracking-widest">IN_TRANSIT</SelectItem>
+                                                <SelectItem value="cancelled" className="text-[10px] font-bold uppercase tracking-widest">CANCELLED</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </td>
-                                    <td className="px-4 lg:px-8 py-4 lg:py-6 text-right">
-                                        <div className="flex justify-end gap-1.5 lg:gap-2">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 lg:h-10 lg:w-10 border border-black/5 rounded-none hover:bg-black hover:text-white transition-all scale-90 lg:scale-100">
-                                                <Eye className="h-3.5 lg:h-4 w-3.5 lg:w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 lg:h-10 lg:w-10 border border-black/5 rounded-none hover:bg-black hover:text-white transition-all scale-90 lg:scale-100">
-                                                <MoreHorizontal className="h-3.5 lg:h-4 w-3.5 lg:w-4" />
-                                            </Button>
+                                    <td className="px-6 lg:px-8 py-5 text-right">
+                                        <div className="flex justify-end gap-2">
+                                            <button className="h-10 w-10 border border-border text-muted-foreground hover:bg-primary hover:text-primary-foreground flex items-center justify-center rounded-lg transition-all">
+                                                <Eye className="h-4 w-4" />
+                                            </button>
+                                            <button className="h-10 w-10 border border-border text-muted-foreground hover:bg-primary hover:text-primary-foreground flex items-center justify-center rounded-lg transition-all">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

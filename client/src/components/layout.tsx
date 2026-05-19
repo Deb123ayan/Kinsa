@@ -9,13 +9,31 @@ import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useLanguage } from "@/context/language-context";
 import { LanguageSelector } from "@/components/language-selector";
+import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
   const { isLoggedIn, logout, isAdmin, loading: authLoading } = useAuth();
   const { cartCount } = useCart();
   const { t } = useLanguage();
+
+  // Scroll tracking and progress indicator spring configuration
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 25,
+    restDelta: 0.001
+  });
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navLinks = [
     { href: "/", label: t('nav.home') },
@@ -26,15 +44,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const NavContent = ({ className }: { className?: string }) => (
     <nav className={className}>
-      {navLinks.map((link) => (
+      {navLinks.map((link, index) => (
         <Link key={link.href} href={link.href}>
-          <span
-            className={`text-sm font-medium transition-colors hover:text-accent cursor-pointer block ${location === link.href ? "text-accent font-semibold" : "text-foreground/80"
+          <motion.span
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, ease: "easeOut" }}
+            className={`text-sm font-medium transition-colors hover:text-accent cursor-pointer block relative py-2 group ${location === link.href ? "text-accent font-semibold" : "text-foreground/80"
               }`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             {link.label}
-          </span>
+            {/* Elegant hover line underline slider */}
+            <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-accent scale-x-0 transition-transform duration-300 origin-left group-hover:scale-x-100 ${location === link.href ? "scale-x-100" : ""
+              }`} />
+          </motion.span>
         </Link>
       ))}
     </nav>
@@ -42,6 +66,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans overflow-x-hidden">
+      {/* Premium viewport scroll progress bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-accent z-[100] origin-left"
+        style={{ scaleX }}
+      />
+
       {/* Top Bar */}
       <div className="bg-primary px-2 sm:px-4 py-1 sm:py-2 text-primary-foreground text-xs overflow-x-hidden">
         <div className="container mx-auto flex justify-between items-center gap-2 sm:gap-4">
@@ -66,8 +96,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-x-hidden">
-        <div className="container mx-auto flex h-14 sm:h-16 md:h-20 items-center px-2 sm:px-4">
+      <motion.header
+        animate={{
+          paddingTop: isScrolled ? "0px" : "8px",
+          paddingBottom: isScrolled ? "0px" : "8px",
+          boxShadow: isScrolled ? "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)" : "0 0px 0px 0px transparent",
+          backgroundColor: isScrolled ? "var(--color-bg-elevated)" : "rgba(253, 251, 247, 0.8)",
+          backdropFilter: isScrolled ? "blur(12px)" : "blur(4px)"
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="sticky top-0 z-50 w-full border-b overflow-x-hidden"
+      >
+        <div className={`container mx-auto flex items-center px-2 sm:px-4 transition-all duration-300 ${isScrolled ? 'h-14 sm:h-16' : 'h-16 sm:h-20'}`}>
 
           {/* Logo */}
           <Link href={isLoggedIn ? "/dashboard" : "/"}>
@@ -108,39 +148,61 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       </Link>
                     )}
                     <Link href="/dashboard">
-                      <div className="p-1.5 sm:p-2 hover:bg-accent/10 hover:scale-110 rounded-full transition-all duration-200 group text-foreground hover:text-accent cursor-pointer hover:shadow-md">
+                      <div className="p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group text-foreground hover:text-accent cursor-pointer hover:shadow-md">
                         <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:rotate-3" />
                       </div>
                     </Link>
                     <Link href="/cart">
-                      <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 hover:scale-110 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
+                      <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
                         <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-foreground group-hover:text-accent transition-all duration-200 shrink-0 group-hover:animate-pulse" />
-                        {cartCount > 0 && (
-                          <Badge className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 group-hover:animate-bounce">
-                            {cartCount}
-                          </Badge>
-                        )}
+                        <AnimatePresence mode="wait">
+                          {cartCount > 0 && (
+                            <motion.div
+                              key={cartCount}
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 600, damping: 15 }}
+                              className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1"
+                            >
+                              <Badge className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 font-bold">
+                                {cartCount}
+                              </Badge>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </Link>
-                    <Button variant="ghost" size="icon" onClick={logout} title="Logout" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 hover:bg-destructive/10 hover:scale-110 transition-all duration-200 group hover:shadow-md">
+                    <Button variant="ghost" size="icon" onClick={logout} title="Logout" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 hover:bg-destructive/10 transition-all duration-200 group hover:shadow-md">
                       <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-foreground hover:text-destructive transition-all duration-200 group-hover:rotate-12" />
                     </Button>
                   </>
                 ) : (
                   <>
                     <Link href="/cart">
-                      <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 hover:scale-110 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
+                      <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
                         <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-foreground group-hover:text-accent transition-all duration-200 shrink-0 group-hover:animate-pulse" />
-                        {cartCount > 0 && (
-                          <Badge className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 group-hover:animate-bounce">
-                            {cartCount}
-                          </Badge>
-                        )}
+                        <AnimatePresence mode="wait">
+                          {cartCount > 0 && (
+                            <motion.div
+                              key={cartCount}
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 600, damping: 15 }}
+                              className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1"
+                            >
+                              <Badge className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 font-bold">
+                                {cartCount}
+                              </Badge>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </Link>
 
                     <Link href="/auth">
-                      <Button variant="outline" className="flex border-primary text-primary hover:bg-primary hover:text-primary-foreground hover:scale-105 hover:shadow-lg shrink-0 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10 transition-all duration-200 group">
+                      <Button variant="outline" className="flex border-primary text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg shrink-0 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10 transition-all duration-200 group">
                         <span className="hidden md:inline group-hover:animate-pulse">Partner </span>{t('nav.login').replace('Partner ', '')}
                       </Button>
                     </Link>
@@ -152,7 +214,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden shrink-0 h-8 w-8 sm:h-10 sm:w-10 hover:bg-accent/10 hover:scale-110 transition-all duration-200 group hover:shadow-md">
+                <Button variant="ghost" size="icon" className="lg:hidden shrink-0 h-8 w-8 sm:h-10 sm:w-10 hover:bg-accent/10 transition-all duration-200 group hover:shadow-md">
                   <Menu className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 group-hover:rotate-90" />
                 </Button>
               </SheetTrigger>
@@ -226,7 +288,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Sheet>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Main Content */}
       <main className="flex-1 overflow-x-hidden">
@@ -253,9 +315,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               Connecting global markets with premium quality grains, spices, and pulses.
               Certified excellence in every shipment.
             </p>
-            <Link href="/admin/login">
+            {/* <Link href="/admin/login">
               <span className="text-[10px] uppercase tracking-[0.3em] font-black opacity-20 hover:opacity-100 transition-opacity cursor-crosshair">Technical_Console_Access</span>
-            </Link>
+            </Link> */}
           </div>
 
           {/* Quick Links */}

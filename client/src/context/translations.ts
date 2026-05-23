@@ -1,7 +1,7 @@
 
-export type Language = 'en' | 'hi' | 'es' | 'fr' | 'de' | 'zh' | 'ar';
+export type Language = 'en' | 'hi' | 'es' | 'fr' | 'de' | 'zh' | 'ar' | 'pt' | 'ru' | 'ja' | 'ko' | 'it' | 'tr' | 'nl' | 'bn' | 'vi' | 'th' | 'id';
 
-export const translations: Record<Language, Record<string, string>> = {
+export const translations: Partial<Record<Language, Record<string, string>>> & { en: Record<string, string> } = {
   en: {
     // Navigation
     'nav.home': 'Home',
@@ -61,6 +61,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': 'Cancel',
     'common.view': 'View',
     'common.details': 'Details',
+    
+    // Footer
+    'footer.brand_desc': 'Connecting global markets with premium quality grains, spices, and pulses. Certified excellence in every shipment.',
+    'footer.copyright': '© 2024, KINSA Global. All rights reserved.',
+    'footer.product_catalog': 'Product Catalog',
+    'footer.our_story': 'Our Story',
+    'footer.contact_sales': 'Contact Sales',
+    'footer.track_shipment': 'Track Shipment',
+    'footer.premium_grains': 'Premium Grains',
+    'footer.exotic_spices': 'Exotic Spices',
+    'footer.organic_pulses': 'Organic Pulses',
+    'footer.newsletter_title': 'Sign up to our newsletter',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': 'Subscribe',
   },
   hi: {
     // Navigation
@@ -121,6 +135,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': 'रद्द करें',
     'common.view': 'देखें',
     'common.details': 'विवरण',
+    
+    // Footer
+    'footer.brand_desc': 'प्रीमियम गुणवत्ता वाले अनाज, मसाले और दालों के साथ वैश्विक बाजारों को जोड़ना। हर शिपमेंट में प्रमाणित उत्कृष्टता।',
+    'footer.copyright': '© 2024, KINSA Global. सर्वाधिकार सुरक्षित।',
+    'footer.product_catalog': 'उत्पाद कैटलॉग',
+    'footer.our_story': 'हमारी कहानी',
+    'footer.contact_sales': 'बिक्री संपर्क',
+    'footer.track_shipment': 'शिपमेंट ट्रैक करें',
+    'footer.premium_grains': 'प्रीमियम अनाज',
+    'footer.exotic_spices': 'विदेशी मसाले',
+    'footer.organic_pulses': 'जैविक दालें',
+    'footer.newsletter_title': 'हमारे न्यूज़लेटर के लिए साइन अप करें',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': 'सदस्यता लें',
   },
   es: {
     // Navigation
@@ -166,6 +194,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': 'Cancelar',
     'common.view': 'Ver',
     'common.details': 'Detalles',
+    
+    // Footer
+    'footer.brand_desc': 'Conectando los mercados globales con granos, especias y legumbres de calidad premium. Excelencia certificada en cada envío.',
+    'footer.copyright': '© 2024, KINSA Global. Todos los derechos reservados.',
+    'footer.product_catalog': 'Catálogo de Productos',
+    'footer.our_story': 'Nuestra Historia',
+    'footer.contact_sales': 'Contactar Ventas',
+    'footer.track_shipment': 'Rastrear Envío',
+    'footer.premium_grains': 'Granos Premium',
+    'footer.exotic_spices': 'Especias Exóticas',
+    'footer.organic_pulses': 'Legumbres Orgánicas',
+    'footer.newsletter_title': 'Suscríbete a nuestro boletín',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': 'Suscribirse',
   },
   fr: {
     // Navigation
@@ -211,6 +253,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': 'Annuler',
     'common.view': 'Voir',
     'common.details': 'Détails',
+    
+    // Footer
+    'footer.brand_desc': 'Connexion des marchés mondiaux avec des céréales, des épices et des légumineuses de qualité supérieure. Excellence certifiée dans chaque expédition.',
+    'footer.copyright': '© 2024, KINSA Global. Tous droits réservés.',
+    'footer.product_catalog': 'Catalogue de Produits',
+    'footer.our_story': 'Notre Histoire',
+    'footer.contact_sales': 'Contacter les Ventes',
+    'footer.track_shipment': 'Suivre l\'expédition',
+    'footer.premium_grains': 'Céréales Premium',
+    'footer.exotic_spices': 'Épices Exotiques',
+    'footer.organic_pulses': 'Légumineuses Biologiques',
+    'footer.newsletter_title': 'Inscrivez-vous à notre newsletter',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': 'S\'abonner',
   },
   de: {
     // Navigation
@@ -256,6 +312,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': 'Abbrechen',
     'common.view': 'Ansehen',
     'common.details': 'Details',
+    
+    // Footer
+    'footer.brand_desc': 'Verbindung globaler Märkte mit hochwertigen Getreiden, Gewürzen und Hülsenfrüchten. Zertifizierte Exzellenz in jeder Lieferung.',
+    'footer.copyright': '© 2024, KINSA Global. Alle Rechte vorbehalten.',
+    'footer.product_catalog': 'Produktkatalog',
+    'footer.our_story': 'Unsere Geschichte',
+    'footer.contact_sales': 'Vertrieb Kontaktieren',
+    'footer.track_shipment': 'Sendung Verfolgen',
+    'footer.premium_grains': 'Premium Getreide',
+    'footer.exotic_spices': 'Exotische Gewürze',
+    'footer.organic_pulses': 'Bio-Hülsenfrüchte',
+    'footer.newsletter_title': 'Melden Sie sich für unseren Newsletter an',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': 'Abonnieren',
   },
   zh: {
     // Navigation
@@ -301,6 +371,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': '取消',
     'common.view': '查看',
     'common.details': '详情',
+    
+    // Footer
+    'footer.brand_desc': '用优质谷物、香料和豆类连接全球市场。每次发货都保证卓越品质。',
+    'footer.copyright': '© 2024, KINSA Global. 保留所有权利。',
+    'footer.product_catalog': '产品目录',
+    'footer.our_story': '品牌故事',
+    'footer.contact_sales': '联系销售',
+    'footer.track_shipment': '追踪货件',
+    'footer.premium_grains': '优质谷物',
+    'footer.exotic_spices': '异国香料',
+    'footer.organic_pulses': '有机豆类',
+    'footer.newsletter_title': '订阅我们的新闻',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': '订阅',
   },
   ar: {
     // Navigation
@@ -346,5 +430,19 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.cancel': 'إلغاء',
     'common.view': 'عرض',
     'common.details': 'التفاصيل',
+    
+    // Footer
+    'footer.brand_desc': 'ربط الأسواق العالمية بالحبوب والتوابل والبقوليات عالية الجودة. التميز المعتمد في كل شحنة.',
+    'footer.copyright': '© 2024, KINSA Global. كل الحقوق محفوظة.',
+    'footer.product_catalog': 'كتالوج المنتجات',
+    'footer.our_story': 'قصتنا',
+    'footer.contact_sales': 'اتصل بالمبيعات',
+    'footer.track_shipment': 'تتبع الشحنة',
+    'footer.premium_grains': 'حبوب فاخرة',
+    'footer.exotic_spices': 'توابل غريبة',
+    'footer.organic_pulses': 'بقوليات عضوية',
+    'footer.newsletter_title': 'اشترك في النشرة الإخبارية',
+    'footer.email_placeholder': 'email@example.com',
+    'footer.subscribe': 'اشتراك',
   },
 };

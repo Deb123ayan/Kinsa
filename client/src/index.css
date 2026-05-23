@@ -454,3 +454,30 @@
     animation-delay: 300ms;
   }
 }
+
+/* Hide Google Translate top frame, widget, and tooltips */
+.goog-te-banner-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+iframe.goog-te-banner-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+body {
+  top: 0px !important;
+  position: static !important;
+}
+.VIpgJd-Zvi9od-ORHb-OEVmcd {
+  display: none !important;
+}
+.VIpgJd-Zvi9od-aZ2wEe-wOHMyf {
+  display: none !important;
+}
+#goog-gt-tt {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}

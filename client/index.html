@@ -35,10 +35,47 @@
         perspective: 1000px;
       }
     }
+    
+    /* Hard override for Google Translate UI */
+    .goog-te-banner-frame.skiptranslate, 
+    .goog-te-banner-frame, 
+    #goog-gt-tt, 
+    .VIpgJd-Zvi9od-ORHb-OEVmcd, 
+    .VIpgJd-Zvi9od-aZ2wEe-wOHMyf, 
+    .goog-tooltip, 
+    .goog-tooltip:hover {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    /* Some older/newer injected iframes */
+    iframe.skiptranslate {
+      display: none !important;
+    }
+    
+    /* Prevent the top offset jump */
+    body {
+      top: 0px !important; 
+      position: static !important;
+    }
+    
+    /* Remove text highlighting on translated words */
+    .goog-text-highlight {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
   </style>
 </head>
 
 <body>
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

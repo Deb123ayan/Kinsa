@@ -21,6 +21,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const savedLanguage = localStorage.getItem('kinsa-language') as Language;
     if (savedLanguage && translations[savedLanguage]) {
       setLanguageState(savedLanguage);
+      
+      // Delay to ensure Google Translate script has loaded its elements
+      setTimeout(() => {
+        const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+        if (selectElement) {
+          let googleLang = savedLanguage;
+          if (savedLanguage === 'zh') googleLang = 'zh-CN';
+          
+          if (selectElement.value !== googleLang) {
+            selectElement.value = googleLang;
+            selectElement.dispatchEvent(new Event('change'));
+          }
+        }
+      }, 1500);
     }
   }, []);
 
@@ -28,11 +42,24 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('kinsa-language', lang);
+
+    // Trigger Google Translate
+    const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+    if (selectElement) {
+      // Map 'zh' to 'zh-CN' as required by Google Translate
+      let googleLang = lang;
+      if (lang === 'zh') googleLang = 'zh-CN';
+      
+      selectElement.value = googleLang;
+      selectElement.dispatchEvent(new Event('change'));
+    }
   };
 
-  // Translation function
+  // Translation function: When using Google Translate widget, we primarily rely on it
+  // to translate the text in the DOM. The `t` function can still act as a fallback 
+  // or return the English original string which Google Translate will then translate.
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    return translations['en'][key] || key;
   };
 
   const value = {

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Globe, Phone, FileText, Menu, Anchor, LogOut, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Globe, Phone, FileText, Menu, Anchor, LogOut, LayoutDashboard, ShieldCheck, Instagram, Youtube, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -98,8 +98,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Header */}
       <motion.header
         animate={{
-          paddingTop: isScrolled ? "0px" : "8px",
-          paddingBottom: isScrolled ? "0px" : "8px",
+          paddingTop: isScrolled ? "0px" : "4px",
+          paddingBottom: isScrolled ? "0px" : "4px",
           boxShadow: isScrolled ? "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)" : "0 0px 0px 0px transparent",
           backgroundColor: isScrolled ? "var(--color-bg-elevated)" : "rgba(253, 251, 247, 0.8)",
           backdropFilter: isScrolled ? "blur(12px)" : "blur(4px)"
@@ -107,7 +107,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="sticky top-0 z-50 w-full border-b overflow-x-hidden"
       >
-        <div className={`container mx-auto flex items-center px-2 sm:px-4 transition-all duration-300 ${isScrolled ? 'h-14 sm:h-16' : 'h-16 sm:h-20'}`}>
+        <div className={`container mx-auto flex items-center px-2 sm:px-4 transition-all duration-300 ${isScrolled ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}`}>
 
           {/* Logo */}
           <Link href={isLoggedIn ? "/dashboard" : "/"}>
@@ -116,7 +116,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <img
                   src="/logo_favicon.jpeg"
                   alt="KINSA Global Logo"
-                  className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 object-cover transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
               <div className="flex flex-col min-w-0">
@@ -277,9 +277,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         <Link href="/auth">
                           <Button className="w-full" onClick={() => setIsMobileMenuOpen(false)}>{t('nav.login')}</Button>
                         </Link>
-                        <Link href="/admin/login">
-                          <Button variant="ghost" className="w-full text-[10px] uppercase opacity-40" onClick={() => setIsMobileMenuOpen(false)}>Admin Console</Button>
-                        </Link>
+
                       </div>
                     )
                   )}
@@ -296,78 +294,68 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-primary-foreground pt-16 pb-8 overflow-x-hidden">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+      <footer className="bg-primary text-white pt-20 pb-8 overflow-x-hidden border-t border-white/10 font-sans relative">
+        {/* Subtle background glow effect */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-accent/10 blur-[100px] pointer-events-none" />
 
-          {/* Brand */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 drop-shadow-md">
-              <div className="rounded-full overflow-hidden shadow-lg shadow-black/20 shrink-0">
-                <img
-                  src="/logo_favicon.jpeg"
-                  alt="KINSA Global Logo"
-                  className="h-12 w-12 object-cover"
-                />
-              </div>
-              <span className="font-serif text-xl font-bold whitespace-nowrap drop-shadow-sm">KINSA</span>
-            </div>
-            <p className="text-primary-foreground/70 text-sm leading-relaxed">
-              Connecting global markets with premium quality grains, spices, and pulses.
-              Certified excellence in every shipment.
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 relative z-10">
+
+          {/* Col 1: Brand Info */}
+          <div className="flex flex-col space-y-6">
+            <p className="text-sm font-medium text-white max-w-xs leading-relaxed">
+              {t('footer.brand_desc')}
             </p>
-            {/* <Link href="/admin/login">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-black opacity-20 hover:opacity-100 transition-opacity cursor-crosshair">Technical_Console_Access</span>
-            </Link> */}
+            <div className="flex items-center gap-5 text-white">
+              <Instagram className="h-5 w-5 hover:scale-[1.04] cursor-pointer transition-transform duration-300" />
+              <Youtube className="h-5 w-5 hover:scale-[1.04] cursor-pointer transition-transform duration-300" />
+              <MessageCircle className="h-5 w-5 hover:scale-[1.04] cursor-pointer transition-transform duration-300" />
+              <Globe className="h-5 w-5 hover:scale-[1.04] cursor-pointer transition-transform duration-300" />
+            </div>
+            <div className="text-xs font-medium text-white mt-auto pt-8">
+              {t('footer.copyright')}
+            </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-serif text-lg mb-4 text-accent">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-primary-foreground/70">
-              <li><Link href="/catalog"><span className="hover:text-white transition-colors cursor-pointer">Product Catalog</span></Link></li>
-              <li><Link href="/about"><span className="hover:text-white transition-colors cursor-pointer">Our Story</span></Link></li>
-              <li><Link href="/contact"><span className="hover:text-white transition-colors cursor-pointer">Contact Sales</span></Link></li>
-              <li><Link href="/track"><span className="hover:text-white transition-colors cursor-pointer">Track Shipment</span></Link></li>
-            </ul>
+          {/* Col 2: Quick Links */}
+          <div className="flex flex-col space-y-4 text-sm font-medium text-white">
+            <Link href="/catalog"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.product_catalog')}</span></Link>
+            <Link href="/about"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.our_story')}</span></Link>
+            <Link href="/contact"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.contact_sales')}</span></Link>
+            <Link href="/track"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.track_shipment')}</span></Link>
           </div>
 
-          {/* Products */}
-          <div>
-            <h4 className="font-serif text-lg mb-4 text-accent">Products</h4>
-            <ul className="space-y-2 text-sm text-primary-foreground/70">
-              <li><Link href="/catalog?category=grains"><span className="hover:text-white transition-colors cursor-pointer">Premium Grains</span></Link></li>
-              <li><Link href="/catalog?category=spices"><span className="hover:text-white transition-colors cursor-pointer">Exotic Spices</span></Link></li>
-              <li><Link href="/catalog?category=pulses"><span className="hover:text-white transition-colors cursor-pointer">Organic Pulses</span></Link></li>
-            </ul>
+          {/* Col 3: Products */}
+          <div className="flex flex-col space-y-4 text-sm font-medium text-white">
+            <Link href="/catalog?category=grains"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.premium_grains')}</span></Link>
+            <Link href="/catalog?category=spices"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.exotic_spices')}</span></Link>
+            <Link href="/catalog?category=pulses"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.organic_pulses')}</span></Link>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="font-serif text-lg mb-4 text-accent">Contact</h4>
-            <ul className="space-y-2 text-sm text-primary-foreground/70">
-              <li className="flex items-start gap-2">
-                <Globe className="h-4 w-4 mt-1 shrink-0" />
-                <span>123 Trade Harbor Blvd,<br />Mumbai, India 400001</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 shrink-0" />
-                <span>+91 22 1234 5678</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <FileText className="h-4 w-4 shrink-0" />
-                <span>inquiry@kinsa.com</span>
-              </li>
-            </ul>
+          {/* Col 4: Newsletter */}
+          <div className="flex flex-col space-y-4">
+            <h4 className="font-black uppercase text-lg tracking-tight text-white">{t('footer.newsletter_title')}</h4>
+            <div className="flex flex-col gap-3">
+              <input
+                type="email"
+                placeholder={t('footer.email_placeholder')}
+                className="w-full bg-white/5 border border-white/20 rounded-full px-4 py-3 text-sm font-medium text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+              />
+              <button className="w-full bg-accent text-accent-foreground rounded-full px-4 py-3 text-sm font-black uppercase hover:bg-accent/90 transition-all shadow-[0_0_20px_rgba(var(--accent),0.3)] hover:shadow-[0_0_25px_rgba(var(--accent),0.5)]">
+                {t('footer.subscribe')}
+              </button>
+            </div>
+            <div className="flex items-center gap-2 pt-4 opacity-70">
+              <div className="h-7 w-12 bg-white/10 rounded border border-white/20 flex items-center justify-center text-[9px] font-bold text-white">VISA</div>
+              <div className="h-7 w-12 bg-white/10 rounded border border-white/20 flex items-center justify-center text-[9px] font-bold text-white">MC</div>
+              <div className="h-7 w-12 bg-white/10 rounded border border-white/20 flex items-center justify-center text-[9px] font-bold text-white">AMEX</div>
+              <div className="h-7 w-12 bg-white/10 rounded border border-white/20 flex items-center justify-center text-[9px] font-bold text-white">PAYPAL</div>
+            </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center text-xs text-primary-foreground/50 gap-4">
-          <p>© 2024 KINSA Global. All rights reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/privacy"><span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span></Link>
-            <Link href="/terms"><span className="hover:text-white transition-colors cursor-pointer">Terms of Service</span></Link>
-            <Link href="/shipping"><span className="hover:text-white transition-colors cursor-pointer">Shipping Policy</span></Link>
-          </div>
+        {/* Massive Text */}
+        <div className="w-full flex flex-col items-center justify-center px-2 mt-8 leading-[0.8] select-none tracking-tighter overflow-hidden relative z-10">
+          <div className="text-[25vw] font-bold text-white whitespace-nowrap notranslate">KINSA</div>
         </div>
       </footer>
     </div>

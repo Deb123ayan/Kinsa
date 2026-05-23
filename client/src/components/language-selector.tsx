@@ -17,6 +17,17 @@ const languages: { code: Language; name: string; nativeName: string }[] = [
   { code: 'de', name: 'German', nativeName: 'Deutsch' },
   { code: 'zh', name: 'Chinese', nativeName: '中文' },
   { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
+  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt' },
+  { code: 'th', name: 'Thai', nativeName: 'ไทย' },
+  { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia' },
 ];
 
 interface LanguageSelectorProps {
@@ -35,7 +46,7 @@ export function LanguageSelector({ variant = 'default', className = '' }: Langua
         <Button 
           variant="ghost" 
           size={variant === 'compact' ? 'sm' : 'default'}
-          className={`gap-2 hover:bg-accent/10 transition-all duration-200 ${className}`}
+          className={`gap-2 hover:bg-accent/10 transition-all duration-200 notranslate ${className}`}
           title={t('language.select')}
         >
           <Globe className={`${variant === 'compact' ? 'h-3 w-3' : 'h-4 w-4'} shrink-0`} />
@@ -51,7 +62,7 @@ export function LanguageSelector({ variant = 'default', className = '' }: Langua
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-48 notranslate">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}

@@ -120,7 +120,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-serif text-lg sm:text-xl font-bold leading-none tracking-tight text-primary whitespace-nowrap drop-shadow-sm group-hover:text-accent transition-colors duration-300">KINSA</span>
+                <span className="font-serif text-lg sm:text-xl font-bold leading-none tracking-tight text-primary whitespace-nowrap drop-shadow-sm group-hover:text-accent transition-colors duration-300 notranslate">KINSA</span>
                 <span className="text-[8px] sm:text-[10px] uppercase tracking-widest text-muted-foreground whitespace-nowrap drop-shadow-sm group-hover:text-accent/70 transition-colors duration-300">Global Exim</span>
               </div>
             </div>

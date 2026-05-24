@@ -22,7 +22,7 @@ export function LoadingScreen() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-serif text-4xl font-bold text-primary">KINSA</span>
+            <span className="font-serif text-4xl font-bold text-primary notranslate">KINSA</span>
             <span className="text-sm uppercase tracking-widest text-muted-foreground">Global Exim</span>
           </div>
         </motion.div>

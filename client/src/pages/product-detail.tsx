@@ -21,6 +21,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(10);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -136,17 +137,34 @@ export default function ProductDetail() {
           <div className="space-y-4">
              <div className="aspect-[4/3] rounded-lg overflow-hidden bg-secondary border border-border">
                <img 
-                src={product.image} 
+                src={product.images[selectedImageIdx] || product.image} 
                 alt={product.name} 
                 className="w-full h-full object-cover"
                />
              </div>
              <div className="grid grid-cols-4 gap-4">
-               {[1, 2, 3, 4].map((i) => (
-                 <div key={i} className="aspect-square rounded-md overflow-hidden bg-secondary border border-border cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all">
-                   <img src={product.image} alt="" className="w-full h-full object-cover opacity-80 hover:opacity-100" />
-                 </div>
-               ))}
+               {[0, 1, 2, 3].map((i) => {
+                 const imgUrl = product.images?.[i];
+                 if (imgUrl) {
+                   return (
+                     <div 
+                       key={i} 
+                       onClick={() => setSelectedImageIdx(i)}
+                       className={`aspect-square rounded-md overflow-hidden bg-secondary border cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all ${selectedImageIdx === i ? 'ring-2 ring-accent border-accent' : 'border-border'}`}
+                     >
+                       <img src={imgUrl} alt={`${product.name} thumbnail ${i + 1}`} className={`w-full h-full object-cover ${selectedImageIdx === i ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`} />
+                     </div>
+                   );
+                 }
+                 return (
+                   <div 
+                     key={i} 
+                     className="aspect-square rounded-md bg-secondary/50 border border-border/50 flex items-center justify-center"
+                   >
+                     <span className="text-muted-foreground/30 text-xs">Image {i + 1}</span>
+                   </div>
+                 );
+               })}
              </div>
           </div>
 
@@ -280,29 +298,24 @@ export default function ProductDetail() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="specs" className="pt-6">
-              <div className="bg-white rounded-lg border border-border w-full max-w-full overflow-x-auto">
+              <div className="w-full max-w-2xl overflow-x-auto">
                 <Table>
                   <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium bg-muted/30 w-1/3 min-w-[120px]">Origin</TableCell>
-                      <TableCell className="break-words">{product.specs.origin}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Grade</TableCell>
-                      <TableCell className="break-words">{product.specs.grade}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Moisture Content</TableCell>
-                      <TableCell className="break-words">{product.specs.moisture}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Purity</TableCell>
-                      <TableCell className="break-words">{product.specs.purity}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium bg-muted/30 min-w-[120px]">Shelf Life</TableCell>
-                      <TableCell className="break-words">12-24 Months (depending on storage)</TableCell>
-                    </TableRow>
+                    {Object.entries(product.specs).map(([key, value]) => (
+                      <TableRow key={key} className="border-0">
+                        <TableCell className="font-serif text-primary text-base bg-muted/30 w-1/3 min-w-[120px] capitalize">
+                          {key.replace(/_/g, ' ')}
+                        </TableCell>
+                        <TableCell className="font-serif text-base break-words">{value || '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                    {Object.keys(product.specs).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                          No technical specifications available.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

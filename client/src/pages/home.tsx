@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Globe2, ShieldCheck, Leaf } from "lucide-react";
+import { ArrowRight, Globe2, ShieldCheck, Leaf } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { CATEGORIES } from "@/data/mock-data";
@@ -244,10 +244,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-32 bg-background">
+      {/* Featured Products – Infinite Marquee */}
+      <section className="py-32 bg-background overflow-hidden">
+        {/* Inject keyframes once */}
+        <style>{`
+          @keyframes marquee-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: marquee-scroll 40s linear infinite;
+            will-change: transform;
+          }
+          .marquee-track:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
+
         <div className="container">
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -258,30 +275,52 @@ export default function Home() {
             <h2 className="display text-4xl lg:text-5xl mb-6">Featured Exports</h2>
             <p className="prose mx-auto">Browse our bestselling commodities with guaranteed quality and competitive CIF pricing.</p>
           </motion.div>
+        </div>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+        {/* Full-bleed marquee – no container constraints */}
+        {loading ? (
+          <div className="flex gap-6 px-6 overflow-hidden">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="skeleton h-[420px] w-72 shrink-0 rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : featuredProducts.length > 0 ? (
+          /* Outer mask – fade edges. dir="ltr" keeps flex order physical even in RTL page mode */
+          <div
+            dir="ltr"
+            className="relative w-full"
+            style={{
+              maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+            }}
           >
-            {loading ? (
-              Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className="skeleton h-[400px] w-full rounded-2xl animate-pulse" />
-              ))
-            ) : featuredProducts.length > 0 ? (
-              featuredProducts.map((product) => (
-                <motion.div key={product.id} variants={fadeInUp}>
+            {/* Duplicate list so the loop is seamless */}
+            <div dir="ltr" className="marquee-track gap-6 px-6">
+              {[...featuredProducts, ...featuredProducts].map((product, idx) => (
+                <div
+                  key={`${product.id}-${idx}`}
+                  className="shrink-0"
+                  style={{ width: "clamp(160px, 44vw, 320px)" }}
+                >
                   <ProductCard product={product} />
-                </motion.div>
-              ))
-            ) : (
-              <div className="col-span-full py-20 text-center border border-border rounded-2xl bg-secondary/50">
-                <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">No products available at the moment.</p>
-              </div>
-            )}
-          </motion.div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="container">
+            <div className="py-20 text-center border border-border rounded-2xl bg-secondary/50">
+              <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">No products available at the moment.</p>
+            </div>
+          </div>
+        )}
+
+        <div className="container mt-16 text-center">
+          <Link href="/catalog">
+            <motion.button whileHover={{ y: -2 }} className="btn btn-ghost">
+              View Full Catalog <ArrowRight className="ml-2 h-4 w-4" />
+            </motion.button>
+          </Link>
         </div>
       </section>
 

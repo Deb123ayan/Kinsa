@@ -9,6 +9,8 @@ export interface DatabaseProduct {
   stock: number | null;
   price: number | null;
   img: string | null;
+  images: string[] | null;
+  specs: Record<string, string> | null;
 }
 
 export interface Product {
@@ -18,13 +20,9 @@ export interface Product {
   price: number; // Price in INR per metric ton
   unit: string;
   image: string;
+  images: string[];
   description: string;
-  specs: {
-    moisture?: string;
-    purity?: string;
-    origin?: string;
-    grade?: string;
-  };
+  specs: Record<string, string>;
   inStock: boolean;
   code?: string;
   stock?: number;
@@ -116,7 +114,18 @@ function transformProduct(dbProduct: DatabaseProduct): Product {
     dbProduct.name || "",
     dbProduct.code || ""
   );
-  const specs = generateSpecs(dbProduct.name || "", category);
+  
+  // Use DB specs if available, otherwise fallback to generated specs
+  const specs = (dbProduct.specs && Object.keys(dbProduct.specs).length > 0)
+    ? dbProduct.specs
+    : generateSpecs(dbProduct.name || "", category) as Record<string, string>;
+
+  // Use images array if available, otherwise fallback to img string or default
+  const defaultImage = "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop";
+  const mainImage = dbProduct.img || defaultImage;
+  const images = (dbProduct.images && dbProduct.images.length > 0) 
+    ? dbProduct.images 
+    : [mainImage];
 
   return {
     id: dbProduct.id.toString(),
@@ -124,10 +133,8 @@ function transformProduct(dbProduct: DatabaseProduct): Product {
     category,
     price: Number(dbProduct.price) || 0,
     unit: "MT",
-    image:
-      dbProduct.img ||
-      dbProduct.image || // Handle both field names
-      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&h=600&fit=crop",
+    image: images[0] || mainImage,
+    images,
     description: dbProduct.description || "Premium quality product for export.",
     specs,
     inStock: (dbProduct.stock || 0) > 0,

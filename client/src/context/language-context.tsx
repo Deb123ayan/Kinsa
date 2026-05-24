@@ -11,7 +11,42 @@ interface LanguageContextType {
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
 
+// ── Reliably apply a language to the Google Translate combo ──────────────────
+// Retries every 200 ms for up to 5 s in case the widget hasn't loaded yet.
+function triggerGoogleTranslate(lang: Language) {
+  const googleLang = lang === 'zh' ? 'zh-CN' : lang;
 
+  const tryApply = () => {
+    const sel = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+    if (sel) {
+      if (sel.value !== googleLang) {
+        sel.value = googleLang;
+        sel.dispatchEvent(new Event('change'));
+      }
+      return true; // success
+    }
+    return false;
+  };
+
+  if (tryApply()) return; // already in DOM → done immediately
+
+  // Not in DOM yet – watch for it AND poll as a fallback
+  let attempts = 0;
+  const MAX = 25; // 25 × 200 ms = 5 s max wait
+
+  const observer = new MutationObserver(() => {
+    if (tryApply()) observer.disconnect();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  const interval = setInterval(() => {
+    attempts++;
+    if (tryApply() || attempts >= MAX) {
+      clearInterval(interval);
+      observer.disconnect();
+    }
+  }, 200);
+}
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = React.useState<Language>('en');
@@ -21,52 +56,23 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const savedLanguage = localStorage.getItem('kinsa-language') as Language;
     if (savedLanguage && translations[savedLanguage]) {
       setLanguageState(savedLanguage);
-      
-      // Delay to ensure Google Translate script has loaded its elements
-      setTimeout(() => {
-        const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-        if (selectElement) {
-          let googleLang = savedLanguage;
-          if (savedLanguage === 'zh') googleLang = 'zh-CN';
-          
-          if (selectElement.value !== googleLang) {
-            selectElement.value = googleLang;
-            selectElement.dispatchEvent(new Event('change'));
-          }
-        }
-      }, 1500);
+      triggerGoogleTranslate(savedLanguage);
     }
   }, []);
 
-  // Save language to localStorage when it changes
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('kinsa-language', lang);
-
-    // Trigger Google Translate
-    const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-    if (selectElement) {
-      // Map 'zh' to 'zh-CN' as required by Google Translate
-      let googleLang = lang;
-      if (lang === 'zh') googleLang = 'zh-CN';
-      
-      selectElement.value = googleLang;
-      selectElement.dispatchEvent(new Event('change'));
-    }
+    triggerGoogleTranslate(lang);
   };
 
-  // Translation function: When using Google Translate widget, we primarily rely on it
-  // to translate the text in the DOM. The `t` function can still act as a fallback 
-  // or return the English original string which Google Translate will then translate.
+  // Translation function – relies on Google Translate for DOM translation;
+  // t() returns the English string which GT then replaces in the DOM.
   const t = (key: string): string => {
     return translations['en'][key] || key;
   };
 
-  const value = {
-    language,
-    setLanguage,
-    t,
-  };
+  const value = { language, setLanguage, t };
 
   return (
     <LanguageContext.Provider value={value}>
@@ -81,4 +87,4 @@ export function useLanguage() {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
-}
+}

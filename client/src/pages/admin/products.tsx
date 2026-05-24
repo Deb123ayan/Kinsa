@@ -30,7 +30,9 @@ function AdminProducts() {
         code: "",
         price: "",
         stock: "",
-        img: ""
+        img: "",
+        images: "",
+        specs: "{}"
     });
 
     const loadProducts = async () => {
@@ -61,7 +63,9 @@ function AdminProducts() {
                     code: newProduct.code,
                     price: parseFloat(newProduct.price),
                     stock: parseInt(newProduct.stock),
-                    img: newProduct.img || "https://images.unsplash.com/photo-1511067007398-7e4b90cfa4bc?q=80&w=600&h=600&fit=crop"
+                    img: newProduct.img || "https://images.unsplash.com/photo-1511067007398-7e4b90cfa4bc?q=80&w=600&h=600&fit=crop",
+                    images: newProduct.images ? newProduct.images.split(',').map(s => s.trim()).filter(Boolean) : (newProduct.img ? [newProduct.img] : ["https://images.unsplash.com/photo-1511067007398-7e4b90cfa4bc?q=80&w=600&h=600&fit=crop"]),
+                    specs: JSON.parse(newProduct.specs || '{}')
                 }]);
 
             if (error) throw error;
@@ -72,7 +76,7 @@ function AdminProducts() {
             });
 
             setIsAddModalOpen(false);
-            setNewProduct({ name: "", description: "", code: "", price: "", stock: "", img: "" });
+            setNewProduct({ name: "", description: "", code: "", price: "", stock: "", img: "", images: "", specs: "{}" });
             loadProducts();
         } catch (error: any) {
             toast({
@@ -236,6 +240,15 @@ function AdminProducts() {
                                     required
                                 />
                             </div>
+                            <div className="md:col-span-2 space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">TECHNICAL_SPECS (JSON)</label>
+                                <textarea
+                                    className="form-input w-full font-mono text-xs min-h-[120px] py-4"
+                                    placeholder='{"Origin": "India", "Grade": "Premium", "Moisture Content": "10-12%", "Purity": "99%"}'
+                                    value={newProduct.specs}
+                                    onChange={(e) => setNewProduct({ ...newProduct, specs: e.target.value })}
+                                />
+                            </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">UNIT_VALUATION (INR)</label>
                                 <input
@@ -259,7 +272,7 @@ function AdminProducts() {
                                 />
                             </div>
                             <div className="md:col-span-2 space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">RESOURCES_CDN_LINK</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">RESOURCES_CDN_LINK (Primary)</label>
                                 <div className="flex gap-4">
                                     <input
                                         className="form-input flex-1"
@@ -271,6 +284,15 @@ function AdminProducts() {
                                         <Upload className="h-5 w-5" />
                                     </div>
                                 </div>
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">ADDITIONAL_IMAGES (Comma Separated URLs)</label>
+                                <textarea
+                                    className="form-input w-full min-h-[80px] py-4"
+                                    placeholder="https://img1.jpg, https://img2.jpg..."
+                                    value={newProduct.images}
+                                    onChange={(e) => setNewProduct({ ...newProduct, images: e.target.value })}
+                                />
                             </div>
 
                             <div className="md:col-span-2 mt-6">

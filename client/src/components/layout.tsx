@@ -17,6 +17,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isHelpOpen, setIsHelpOpen] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [isDesktop, setIsDesktop] = React.useState(true);
   const { isLoggedIn, logout, isAdmin, loading: authLoading } = useAuth();
   const { cartCount } = useCart();
   const { t } = useLanguage();
@@ -25,9 +27,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsDesktop(window.innerWidth >= 1024);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    handleResize();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
 
@@ -88,18 +99,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main Header */}
-      <motion.header
-        animate={{
-          paddingTop: isScrolled ? "0px" : "4px",
-          paddingBottom: isScrolled ? "0px" : "4px",
-          boxShadow: isScrolled ? "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)" : "0 0px 0px 0px transparent",
-          backgroundColor: isScrolled ? "var(--color-bg-elevated)" : "rgba(253, 251, 247, 0.8)",
-          backdropFilter: isScrolled ? "blur(12px)" : "blur(4px)"
-        }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="sticky top-0 z-50 w-full"
-      >
-        <div className={`container mx-auto flex items-center px-2 sm:px-4 transition-all duration-300 ${isScrolled ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}`}>
+      <div className="sticky top-0 z-50 w-full flex justify-center pointer-events-none">
+        <motion.header
+          layout
+          animate={{
+            width: "100%",
+            maxWidth: isScrolled && isDesktop ? "500px" : "1400px",
+            borderRadius: isScrolled && isDesktop ? "9999px" : "0px",
+            marginTop: isScrolled && isDesktop ? "16px" : "0px",
+            paddingTop: isScrolled ? "0px" : "4px",
+            paddingBottom: isScrolled ? "0px" : "4px",
+            boxShadow: isScrolled ? "0 10px 25px -5px rgb(0 0 0 / 0.1)" : "0 0px 0px 0px transparent",
+            backgroundColor: isScrolled ? "var(--color-bg-elevated)" : "rgba(253, 251, 247, 0.8)",
+            backdropFilter: isScrolled ? "blur(12px)" : "blur(4px)"
+          }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className={`pointer-events-auto ${isScrolled && isDesktop ? 'border border-border/40' : ''}`}
+        >
+          <div className={`w-full mx-auto flex items-center px-4 sm:px-6 transition-colors duration-300 ${isScrolled ? 'h-14' : 'h-14 sm:h-16'}`}>
 
           {/* Logo */}
           <Link href={isLoggedIn ? "/dashboard" : "/"}>
@@ -118,94 +135,173 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          {!authLoading && !isLoggedIn && <NavContent className="hidden lg:flex items-center gap-6 xl:gap-8 mx-4 xl:mx-8 flex-1 justify-center" />}
+          <AnimatePresence mode="wait">
+            {isScrolled && isDesktop ? (
+              <motion.div 
+                key="hamburger"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-1 justify-end ml-auto"
+              >
+                <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent/10 h-10 w-10">
+                    <Menu className="h-5 w-5 text-foreground" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col gap-8 mt-12">
+                    {!authLoading && !isLoggedIn && <NavContent className="flex flex-col gap-4 text-lg" />}
+                    
+                    <div className="flex flex-col gap-4">
+                      <LanguageSelector variant="compact" className="w-fit mb-4" />
+                      
+                      {!authLoading && (
+                        isLoggedIn ? (
+                          <>
+                            {isAdmin && (
+                              <Link href="/admin">
+                                <Button variant="outline" className="w-full justify-start gap-2 h-12">
+                                  <ShieldCheck className="h-5 w-5" /> Admin Dashboard
+                                </Button>
+                              </Link>
+                            )}
+                            <Link href="/dashboard">
+                              <Button variant="ghost" className="w-full justify-start gap-2 h-12">
+                                <LayoutDashboard className="h-5 w-5" /> Dashboard
+                              </Button>
+                            </Link>
+                            <Link href="/cart">
+                              <Button variant="ghost" className="w-full justify-start gap-2 h-12">
+                                <ShoppingCart className="h-5 w-5" /> Cart ({cartCount})
+                              </Button>
+                            </Link>
+                            <Button variant="ghost" className="w-full justify-start gap-2 h-12 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={logout}>
+                              <LogOut className="h-5 w-5" /> Logout
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Link href="/cart">
+                              <Button variant="ghost" className="w-full justify-start gap-2 h-12">
+                                <ShoppingCart className="h-5 w-5" /> Cart ({cartCount})
+                              </Button>
+                            </Link>
+                            <Link href="/auth">
+                              <Button className="w-full h-12">
+                                Login
+                              </Button>
+                            </Link>
+                          </>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="desktop-nav"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-1 items-center w-full"
+              >
+                {/* Desktop Nav */}
+                {!authLoading && !isLoggedIn && <NavContent className="hidden lg:flex items-center gap-6 xl:gap-8 mx-4 xl:mx-8 flex-1 justify-center" />}
 
-          {/* Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 justify-end ml-auto">
-            {/* Desktop Actions - Hidden on mobile */}
-            <div className="hidden lg:flex items-center gap-2 md:gap-4">
-              {/* Language Selector */}
-              <LanguageSelector variant="compact" className="shrink-0" />
+                {/* Actions */}
+                <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 justify-end ml-auto">
+                {/* Desktop Actions - Hidden on mobile */}
+                <div className="hidden lg:flex items-center gap-2 md:gap-4">
+                  {/* Language Selector */}
+                  <LanguageSelector variant="compact" className="shrink-0" />
 
-              {!authLoading && (
-                isLoggedIn ? (
-                  <>
-                    {isAdmin && (
-                      <Link href="/admin">
-                        <Button variant="outline" className="h-10 border-2 border-black bg-black text-white hover:bg-white hover:text-black rounded-none px-4 flex items-center gap-2 transition-all">
-                          <ShieldCheck className="h-4 w-4" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Sys_Admin</span>
+                  {!authLoading && (
+                    isLoggedIn ? (
+                      <>
+                        {isAdmin && (
+                          <Link href="/admin">
+                            <Button variant="outline" className="h-10 border-2 border-black bg-black text-white hover:bg-white hover:text-black rounded-none px-4 flex items-center gap-2 transition-all">
+                              <ShieldCheck className="h-4 w-4" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Sys_Admin</span>
+                            </Button>
+                          </Link>
+                        )}
+                        <Link href="/dashboard">
+                          <div className="p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group text-foreground hover:text-accent cursor-pointer hover:shadow-md">
+                            <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:rotate-3" />
+                          </div>
+                        </Link>
+                        <Link href="/cart">
+                          <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
+                            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-foreground group-hover:text-accent transition-all duration-200 shrink-0 group-hover:animate-pulse" />
+                            <AnimatePresence mode="wait">
+                              {cartCount > 0 && (
+                                <motion.div
+                                  key={cartCount}
+                                  initial={{ scale: 0, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0, opacity: 0 }}
+                                  transition={{ type: "spring", stiffness: 600, damping: 15 }}
+                                  className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1"
+                                >
+                                  <Badge className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 font-bold">
+                                    {cartCount}
+                                  </Badge>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </Link>
+                        <Button variant="ghost" size="icon" onClick={logout} title="Logout" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 hover:bg-destructive/10 transition-all duration-200 group hover:shadow-md">
+                          <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-foreground hover:text-destructive transition-all duration-200 group-hover:rotate-12" />
                         </Button>
-                      </Link>
-                    )}
-                    <Link href="/dashboard">
-                      <div className="p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group text-foreground hover:text-accent cursor-pointer hover:shadow-md">
-                        <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:rotate-3" />
-                      </div>
-                    </Link>
-                    <Link href="/cart">
-                      <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
-                        <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-foreground group-hover:text-accent transition-all duration-200 shrink-0 group-hover:animate-pulse" />
-                        <AnimatePresence mode="wait">
-                          {cartCount > 0 && (
-                            <motion.div
-                              key={cartCount}
-                              initial={{ scale: 0, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 600, damping: 15 }}
-                              className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1"
-                            >
-                              <Badge className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 font-bold">
-                                {cartCount}
-                              </Badge>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </Link>
-                    <Button variant="ghost" size="icon" onClick={logout} title="Logout" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 hover:bg-destructive/10 transition-all duration-200 group hover:shadow-md">
-                      <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-foreground hover:text-destructive transition-all duration-200 group-hover:rotate-12" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/cart">
-                      <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
-                        <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-foreground group-hover:text-accent transition-all duration-200 shrink-0 group-hover:animate-pulse" />
-                        <AnimatePresence mode="wait">
-                          {cartCount > 0 && (
-                            <motion.div
-                              key={cartCount}
-                              initial={{ scale: 0, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 600, damping: 15 }}
-                              className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1"
-                            >
-                              <Badge className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 font-bold">
-                                {cartCount}
-                              </Badge>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/cart">
+                          <div className="relative p-1.5 sm:p-2 hover:bg-accent/10 rounded-full transition-all duration-200 group cursor-pointer hover:shadow-md">
+                            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-foreground group-hover:text-accent transition-all duration-200 shrink-0 group-hover:animate-pulse" />
+                            <AnimatePresence mode="wait">
+                              {cartCount > 0 && (
+                                <motion.div
+                                  key={cartCount}
+                                  initial={{ scale: 0, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0, opacity: 0 }}
+                                  transition={{ type: "spring", stiffness: 600, damping: 15 }}
+                                  className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1"
+                                >
+                                  <Badge className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[8px] sm:text-[10px] shrink-0 font-bold">
+                                    {cartCount}
+                                  </Badge>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </Link>
 
-                    <Link href="/auth">
-                      <Button variant="outline" className="flex border-primary text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg shrink-0 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10 transition-all duration-200 group">
-                        <span className="hidden md:inline group-hover:animate-pulse">Partner </span>{t('nav.login').replace('Partner ', '')}
-                      </Button>
-                    </Link>
-                  </>
-                )
-              )}
-            </div>
-            {/* Mobile Menu removed - now a bubble menu */}
-          </div>
+                        <Link href="/auth">
+                          <Button variant="outline" className="flex border-primary text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg shrink-0 text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-10 transition-all duration-200 group">
+                            <span className="hidden md:inline group-hover:animate-pulse">Partner </span>{t('nav.login').replace('Partner ', '')}
+                          </Button>
+                        </Link>
+                      </>
+                    )
+                  )}
+                </div>
+              </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </motion.header>
+        </motion.header>
+      </div>
 
       {/* Main Content */}
       <main className="flex-1">
@@ -221,10 +317,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Col 1: Brand Info */}
           <motion.div 
-            initial={{ opacity: 0, x: -30 }} 
+            initial={isMobile ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }} 
             whileInView={{ opacity: 1, x: 0 }} 
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} 
-            viewport={{ once: true, margin: "-50px" }} 
+            viewport={{ once: true, margin: isMobile ? "0px" : "-50px" }} 
             className="flex flex-col space-y-6"
           >
             <p className="text-sm font-medium text-white max-w-xs leading-relaxed">
@@ -243,10 +339,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Col 2: Quick Links */}
           <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
+            initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }} 
             whileInView={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }} 
-            viewport={{ once: true, margin: "-50px" }} 
+            viewport={{ once: true, margin: isMobile ? "0px" : "-50px" }} 
             className="flex flex-col space-y-4 text-sm font-medium text-white"
           >
             <Link href="/catalog"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.product_catalog')}</span></Link>
@@ -257,10 +353,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Col 3: Products */}
           <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
+            initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }} 
             whileInView={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }} 
-            viewport={{ once: true, margin: "-50px" }} 
+            viewport={{ once: true, margin: isMobile ? "0px" : "-50px" }} 
             className="flex flex-col space-y-4 text-sm font-medium text-white"
           >
             <Link href="/catalog?category=grains"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.premium_grains')}</span></Link>
@@ -270,10 +366,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Col 4: Newsletter */}
           <motion.div 
-            initial={{ opacity: 0, x: 30 }} 
+            initial={isMobile ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }} 
             whileInView={{ opacity: 1, x: 0 }} 
             transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} 
-            viewport={{ once: true, margin: "-50px" }} 
+            viewport={{ once: true, margin: isMobile ? "0px" : "-50px" }} 
             className="flex flex-col space-y-4"
           >
             <h4 className="font-black uppercase text-lg tracking-tight text-white">{t('footer.newsletter_title')}</h4>
@@ -298,7 +394,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Massive Text */}
         <motion.div 
-          initial={{ opacity: 0, y: 50, scale: 0.95 }} 
+          initial={isMobile ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 50, scale: 0.95 }} 
           whileInView={{ opacity: 1, y: 0, scale: 1 }} 
           transition={{ duration: 1.2, ease: "easeOut" }} 
           viewport={{ once: true }} 

@@ -33,7 +33,7 @@ const AdminManagement = lazy(() => import("@/pages/admin/admins"));
 
 const ProtectedDashboard = withProtectedRoute(Dashboard);
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const LoadingFallback = () => (
   <div className="min-h-[100svh] w-full flex flex-col items-center justify-center bg-background gap-8 overflow-hidden">
@@ -86,6 +86,52 @@ const LoadingFallback = () => (
     </motion.div>
   </div>
 );
+
+const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
+  const [isFadingOut, setIsFadingOut] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    
+    if (mobile) {
+      // Basic loading screen timeout on mobile
+      const timer = setTimeout(() => {
+        setIsFadingOut(true);
+      }, 2500); // 2.5 seconds basic loading duration
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    <AnimatePresence onExitComplete={onComplete}>
+      {!isFadingOut && (
+        <motion.div
+          key="splash"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className={`fixed inset-0 z-[9999] flex items-center justify-center pointer-events-auto ${isMobile ? 'bg-background' : 'bg-black'}`}
+        >
+          {isMobile ? (
+            <LoadingFallback />
+          ) : (
+            <video
+              src="/Another_animation_for_the_logo.mp4"
+              autoPlay
+              muted
+              playsInline
+              onEnded={() => setIsFadingOut(true)}
+              onError={() => setIsFadingOut(true)}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 function Router() {
   // Initialize language direction handling
@@ -175,6 +221,15 @@ function Router() {
 
 
 function App() {
+  const [showSplash, setShowSplash] = React.useState(() => {
+    return !sessionStorage.getItem('hasSeenSplash');
+  });
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('hasSeenSplash', 'true');
+    setShowSplash(false);
+  };
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -183,6 +238,7 @@ function App() {
             <CartProvider>
               <TooltipProvider>
                 <Toaster />
+                {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
                 <Router />
               </TooltipProvider>
             </CartProvider>

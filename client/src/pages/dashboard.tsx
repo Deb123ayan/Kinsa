@@ -696,7 +696,7 @@ export default function Dashboard() {
       </div>
 
       {/* Help Assistant */}
-      <HelpAssistant />
+      {/* <HelpAssistant /> */}
     </Layout>
   );
 }

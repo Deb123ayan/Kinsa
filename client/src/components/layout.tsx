@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Globe, Phone, FileText, Menu, Anchor, LogOut, LayoutDashboard, ShieldCheck, Instagram, Youtube, MessageCircle } from "lucide-react";
+import { ShoppingCart, Globe, Phone, FileText, Menu, X, Anchor, LogOut, LayoutDashboard, ShieldCheck, Instagram, Youtube, MessageCircle, Home, Package, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -9,31 +9,28 @@ import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useLanguage } from "@/context/language-context";
 import { LanguageSelector } from "@/components/language-selector";
-import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { HelpAssistant } from "@/components/help-assistant";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isHelpOpen, setIsHelpOpen] = React.useState(false);
   const { isLoggedIn, logout, isAdmin, loading: authLoading } = useAuth();
   const { cartCount } = useCart();
   const { t } = useLanguage();
-
-  // Scroll tracking and progress indicator spring configuration
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 25,
-    restDelta: 0.001
-  });
 
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+
 
   const navLinks = [
     { href: "/", label: t('nav.home') },
@@ -65,12 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background font-sans overflow-x-hidden">
-      {/* Premium viewport scroll progress bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-accent z-[100] origin-left"
-        style={{ scaleX }}
-      />
+    <div className="flex min-h-screen flex-col bg-background font-sans overflow-clip">
 
       {/* Top Bar */}
       <div className="bg-primary px-2 sm:px-4 py-1 sm:py-2 text-primary-foreground text-xs overflow-x-hidden">
@@ -105,7 +97,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           backdropFilter: isScrolled ? "blur(12px)" : "blur(4px)"
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="sticky top-0 z-50 w-full border-b overflow-x-hidden"
+        className="sticky top-0 z-50 w-full"
       >
         <div className={`container mx-auto flex items-center px-2 sm:px-4 transition-all duration-300 ${isScrolled ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}`}>
 
@@ -210,86 +202,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )
               )}
             </div>
-
-            {/* Mobile Menu */}
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden shrink-0 h-8 w-8 sm:h-10 sm:w-10 hover:bg-accent/10 transition-all duration-200 group hover:shadow-md">
-                  <Menu className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 group-hover:rotate-90" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[350px]">
-                <div className="flex flex-col gap-6 mt-6">
-                  {/* Language Selector */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Language</span>
-                    <LanguageSelector variant="default" />
-                  </div>
-
-                  <NavContent className="flex flex-col gap-4" />
-
-                  <Separator />
-
-                  {!authLoading && (
-                    isLoggedIn ? (
-                      <div className="flex flex-col gap-4">
-                        <Link href="/dashboard">
-                          <Button variant="outline" className="w-full justify-start" onClick={() => setIsMobileMenuOpen(false)}>
-                            <LayoutDashboard className="h-4 w-4 mr-2" />
-                            {t('nav.dashboard')}
-                          </Button>
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/admin">
-                            <Button variant="outline" className="w-full justify-start border-black bg-black text-white hover:bg-black/90" onClick={() => setIsMobileMenuOpen(false)}>
-                              <ShieldCheck className="h-4 w-4 mr-2" />
-                              Technical Hub
-                            </Button>
-                          </Link>
-                        )}
-                        <Link href="/cart">
-                          <Button variant="outline" className="w-full justify-start" onClick={() => setIsMobileMenuOpen(false)}>
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            {t('nav.cart')} {cartCount > 0 && (
-                              <Badge className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[10px]">
-                                {cartCount}
-                              </Badge>
-                            )}
-                          </Button>
-                        </Link>
-                        <Button variant="destructive" className="w-full justify-start" onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
-                          <LogOut className="h-4 w-4 mr-2" />
-                          {t('nav.logout')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-4">
-                        <Link href="/cart">
-                          <Button variant="outline" className="w-full justify-start" onClick={() => setIsMobileMenuOpen(false)}>
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            {t('nav.cart')} {cartCount > 0 && (
-                              <Badge className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-accent text-accent-foreground rounded-full text-[10px]">
-                                {cartCount}
-                              </Badge>
-                            )}
-                          </Button>
-                        </Link>
-                        <Link href="/auth">
-                          <Button className="w-full" onClick={() => setIsMobileMenuOpen(false)}>{t('nav.login')}</Button>
-                        </Link>
-
-                      </div>
-                    )
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+            {/* Mobile Menu removed - now a bubble menu */}
           </div>
         </div>
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1">
         {children}
       </main>
 
@@ -301,7 +220,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 relative z-10">
 
           {/* Col 1: Brand Info */}
-          <div className="flex flex-col space-y-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }} 
+            whileInView={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            className="flex flex-col space-y-6"
+          >
             <p className="text-sm font-medium text-white max-w-xs leading-relaxed">
               {t('footer.brand_desc')}
             </p>
@@ -314,25 +239,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="text-xs font-medium text-white mt-auto pt-8">
               {t('footer.copyright')}
             </div>
-          </div>
+          </motion.div>
 
           {/* Col 2: Quick Links */}
-          <div className="flex flex-col space-y-4 text-sm font-medium text-white">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            className="flex flex-col space-y-4 text-sm font-medium text-white"
+          >
             <Link href="/catalog"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.product_catalog')}</span></Link>
             <Link href="/about"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.our_story')}</span></Link>
             <Link href="/contact"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.contact_sales')}</span></Link>
             <Link href="/track"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.track_shipment')}</span></Link>
-          </div>
+          </motion.div>
 
           {/* Col 3: Products */}
-          <div className="flex flex-col space-y-4 text-sm font-medium text-white">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            className="flex flex-col space-y-4 text-sm font-medium text-white"
+          >
             <Link href="/catalog?category=grains"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.premium_grains')}</span></Link>
             <Link href="/catalog?category=spices"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.exotic_spices')}</span></Link>
             <Link href="/catalog?category=pulses"><span className="hover:scale-[1.04] origin-left inline-block transition-transform duration-300 cursor-pointer">{t('footer.organic_pulses')}</span></Link>
-          </div>
+          </motion.div>
 
           {/* Col 4: Newsletter */}
-          <div className="flex flex-col space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }} 
+            whileInView={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} 
+            viewport={{ once: true, margin: "-50px" }} 
+            className="flex flex-col space-y-4"
+          >
             <h4 className="font-black uppercase text-lg tracking-tight text-white">{t('footer.newsletter_title')}</h4>
             <div className="flex flex-col gap-3">
               <input
@@ -350,14 +293,132 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="h-7 w-12 bg-white/10 rounded border border-white/20 flex items-center justify-center text-[9px] font-bold text-white">AMEX</div>
               <div className="h-7 w-12 bg-white/10 rounded border border-white/20 flex items-center justify-center text-[9px] font-bold text-white">PAYPAL</div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Massive Text */}
-        <div className="w-full flex flex-col items-center justify-center px-2 mt-8 leading-[0.8] select-none tracking-tighter overflow-hidden relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 50, scale: 0.95 }} 
+          whileInView={{ opacity: 1, y: 0, scale: 1 }} 
+          transition={{ duration: 1.2, ease: "easeOut" }} 
+          viewport={{ once: true }} 
+          className="w-full flex flex-col items-center justify-center px-2 mt-8 leading-[0.8] select-none tracking-tighter overflow-hidden relative z-10"
+        >
           <div className="text-[25vw] font-bold text-white whitespace-nowrap notranslate">KINSA</div>
-        </div>
+        </motion.div>
       </footer>
+      {/* ── Small-screen Bubble Menu (< lg) ────────────────────────────────── */}
+      <div className="lg:hidden fixed bottom-6 right-6 sm:right-8 flex flex-col items-end pointer-events-none z-[90]">
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <div className="flex flex-col items-end gap-4 mb-4 z-[100] pointer-events-auto">
+              {(isLoggedIn
+                ? [
+                    { icon: Home, label: "Home", href: "/" },
+                    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+                    { icon: Package, label: "Catalog", href: "/catalog" },
+                    { icon: ShoppingCart, label: "Cart", href: "/cart", badge: cartCount },
+                    ...(isAdmin ? [{ icon: ShieldCheck, label: "Admin", href: "/admin" }] : []),
+                    {
+                      icon: HelpCircle,
+                      label: "Help",
+                      onClick: () => { setIsHelpOpen(true); setIsMobileMenuOpen(false); },
+                    },
+                    { icon: LogOut, label: "Logout", onClick: () => { logout(); setIsMobileMenuOpen(false); } },
+                  ]
+                : [
+                    { icon: Home, label: "Home", href: "/" },
+                    { icon: Package, label: "Catalog", href: "/catalog" },
+                    { icon: Phone, label: "Contact", href: "/contact" },
+                    { icon: ShoppingCart, label: "Cart", href: "/cart", badge: cartCount },
+                    { icon: ShieldCheck, label: "Login", href: "/auth" },
+                  ]
+              ).map((item: any, idx: number, arr: any[]) => {
+                const content = (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0, y: 15 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0, opacity: 0, y: 15 }}
+                    transition={{ delay: (arr.length - 1 - idx) * 0.05, type: "spring", stiffness: 400, damping: 25 }}
+                    className="flex items-center gap-3 group"
+                  >
+                    <span className="bg-background/95 backdrop-blur-md px-4 py-2 rounded-2xl text-xs font-bold shadow-lg whitespace-nowrap text-foreground border border-border">
+                      {item.label}
+                    </span>
+                    <button className="h-12 w-12 rounded-full bg-background border border-border shadow-lg flex items-center justify-center hover:bg-accent hover:text-white transition-all hover:scale-105 relative">
+                      <item.icon className="h-5 w-5" />
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full shadow-sm">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  </motion.div>
+                );
+
+                if (item.href) {
+                  return (
+                    <Link key={idx} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                      {content}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <div key={idx} onClick={item.onClick} className="cursor-pointer">
+                    {content}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Main bubble toggle */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="h-12 w-12 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all border border-white/10 z-[100] pointer-events-auto bg-black text-white"
+        >
+          <AnimatePresence mode="wait">
+            {isMobileMenuOpen ? (
+              <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <X className="h-5 w-5" />
+              </motion.div>
+            ) : (
+              <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <Menu className="h-5 w-5" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </div>
+
+      {/* ── Large-screen Help icon (lg+) — mirrors old standalone HelpAssistant ── */}
+      {isLoggedIn && (
+        <div className="hidden lg:block fixed bottom-6 right-6 sm:right-8 z-[90]">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 260, damping: 20 }}
+            className="relative"
+          >
+            {/* Pulse ring */}
+            <div className="absolute inset-0 rounded-full bg-accent/30 animate-ping" />
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsHelpOpen(true)}
+              className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-accent text-white shadow-2xl flex items-center justify-center hover:scale-110 hover:bg-accent/90 transition-all"
+            >
+              <HelpCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+            </motion.button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Help Assistant modal — controlled from both layouts */}
+      {isLoggedIn && <HelpAssistant externalOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />}
+
     </div>
   );
 }

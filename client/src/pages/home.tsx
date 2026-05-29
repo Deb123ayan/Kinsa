@@ -1,51 +1,53 @@
-import { ArrowRight, Globe2, ShieldCheck, Leaf } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { CATEGORIES } from "@/data/mock-data";
 import { ProductCard } from "@/components/product-card";
 import heroImg from "@assets/generated_images/cargo_ship_global_trade_with_wheat_and_spices_overlay.png";
 import { useAuth } from "@/context/auth-context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchProducts, type Product } from "@/services/products";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
+function Word({ children, progress, range }: { children: string, progress: any, range: [number, number] }) {
+  const opacity = useTransform(progress, range, [0.15, 1]);
+  return <motion.span style={{ opacity }} className="text-foreground">{children}</motion.span>;
+}
+
+function StorySection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 80%", "end 50%"]
+  });
+
+  const text = "We don't just export commodities. We export trust. Every harvest is meticulously sourced, strictly certified, and delivered with absolute reverence.";
+  const words = text.split(" ");
+
+  return (
+    <section ref={ref} className="py-24 lg:py-48 bg-background relative border-t border-border">
+      <div className="container max-w-5xl mx-auto px-4 lg:px-8">
+        <p className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif leading-snug lg:leading-tight text-center flex flex-wrap justify-center gap-x-[0.25em] gap-y-2 lg:gap-y-4">
+          {words.map((word, i) => {
+            const start = i / words.length;
+            const end = start + (1 / words.length);
+            return <Word key={i} progress={scrollYProgress} range={[start, end]}>{word}</Word>
+          })}
+        </p>
+      </div>
+    </section>
+  );
+}
 
 // Premium Animation Presets
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
-  }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] } }
 };
 
 const staggerContainer = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15
-    }
-  }
-};
-
-const slideInRight = {
-  hidden: { opacity: 0, x: 60 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.9, type: "spring", stiffness: 50 }
-  }
-};
-
-const popIn = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.6, ease: "easeOut" }
-  }
+  visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
 export default function Home() {
@@ -72,7 +74,6 @@ export default function Home() {
         setLoading(false);
       }
     };
-
     loadProducts();
   }, []);
 
@@ -82,353 +83,275 @@ export default function Home() {
 
   return (
     <Layout>
-      {/* Elite Hero Section - Editorial Asymmetry */}
-      <section className="relative min-h-[90svh] flex items-center pt-32 pb-20 overflow-hidden bg-background">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-bg-subtle),_transparent_50%)]" />
-
-        <div className="container relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 items-center">
-          
-          {/* Typography / Content Side */}
-          <motion.div 
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="lg:col-span-7 z-20"
-          >
-            <motion.div variants={fadeInUp} className="flex items-center gap-4 mb-8">
-              <div className="h-px w-12 bg-accent" />
-              <span className="text-xs font-bold uppercase tracking-[0.25em] text-accent">Premium Agricultural Trading</span>
-            </motion.div>
-            
-            <motion.h1 variants={fadeInUp} className="display text-foreground mb-8">
-              Connecting Nature's Bounty to <br className="hidden md:block" />
-              <span className="text-accent italic font-serif opacity-90">Global Markets.</span>
+      {/* 1. HERO - Full Bleed Split */}
+      <section className="relative min-h-[100svh] w-full flex flex-col lg:flex-row overflow-hidden bg-background">
+        {/* Left: Typography Block */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-20 pt-24 pb-12 lg:pt-0 lg:pb-0 bg-accent text-accent-subtle z-10">
+          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-xl">
+            <motion.h1 variants={fadeInUp} className="text-5xl sm:text-6xl lg:text-[5.5rem] font-serif leading-[0.9] tracking-tight mb-8 text-white">
+              Cultivated <br />
+              with rigor. <br />
+              <span className="italic opacity-80">Traded globally.</span>
             </motion.h1>
             
-            <motion.p variants={fadeInUp} className="prose mb-12 text-lg lg:text-xl">
-              We specialize in the export of premium grains, spices, and pulses. 
-              Meticulously sourced, strictly certified, and delivered with uncompromising reliability from farm to port.
+            <motion.p variants={fadeInUp} className="text-lg lg:text-xl text-white/80 mb-12 max-w-md font-sans font-light leading-relaxed">
+              Exporting premium grains, spices, and pulses. Meticulously sourced, strictly certified, and delivered with uncompromising reliability.
             </motion.p>
             
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
               <Link href="/catalog">
                 <motion.button 
-                  whileHover={{ y: -2 }}
-                  className="btn btn-primary h-14 px-10 text-sm tracking-widest uppercase w-full sm:w-auto shadow-xl"
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center justify-center gap-2 px-8 h-14 bg-white text-accent font-sans font-semibold text-sm tracking-widest uppercase hover:bg-white/90 transition-colors"
                 >
                   Explore Catalog
                 </motion.button>
               </Link>
               <Link href="/contact">
                 <motion.button 
-                  whileHover={{ y: -2 }}
-                  className="btn btn-ghost h-14 px-10 text-sm tracking-widest uppercase w-full sm:w-auto"
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center justify-center gap-2 px-8 h-14 border border-white/30 text-white font-sans font-semibold text-sm tracking-widest uppercase hover:bg-white/10 transition-colors"
                 >
                   Bulk Inquiry
                 </motion.button>
               </Link>
             </motion.div>
           </motion.div>
+        </div>
 
-          {/* Media / Visual Side */}
+        {/* Right: Media Block */}
+        <div className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-screen relative overflow-hidden">
           <motion.div 
-            initial="hidden"
-            animate="visible"
-            variants={slideInRight}
-            className="lg:col-span-5 relative"
+            initial={{ scale: 1.05, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1.5, ease: [0.23, 1, 0.32, 1] }}
+            className="absolute inset-0"
           >
-            <div className="aspect-[4/5] lg:aspect-[3/4] overflow-hidden rounded-[2rem] relative shadow-2xl transform lg:translate-y-12 border border-border/50">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 h-full w-full object-cover"
-                poster={heroImg}
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              >
-                <source src="/ad.mp4" type="video/mp4" />
-              </video>
-              <img
-                src={heroImg}
-                alt="Global Trade Cargo Ship"
-                className="absolute inset-0 h-full w-full object-cover -z-10"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/20 to-transparent" />
-              
-              {/* Overlay Stat Card */}
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
-                className="absolute bottom-8 left-8 right-8 bg-card/80 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-xl"
-              >
-                <p className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-2">Global Reach</p>
-                <p className="text-3xl font-serif text-foreground font-bold">100+ <span className="text-lg font-sans text-muted-foreground font-medium">Buying Partners</span></p>
-              </motion.div>
-            </div>
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
+              poster={heroImg}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            >
+              <source src="/ad.mp4" type="video/mp4" />
+            </video>
+            <img
+              src={heroImg}
+              alt="Global Trade Cargo Ship"
+              className="absolute inset-0 h-full w-full object-cover -z-10"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 2. CATEGORIES - Sticky Scroll-Stack */}
+      <section className="relative py-16 lg:py-32 bg-background border-t border-border">
+        <div className="container px-4 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 items-start relative">
             
-            {/* Decorative background element */}
-            <div className="absolute -z-10 top-1/2 -translate-y-1/2 right-12 w-64 h-64 bg-accent/10 rounded-full blur-3xl animate-pulse" />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Featured Categories - Editorial Grid */}
-      <section className="py-32 bg-secondary overflow-hidden">
-        <div className="container">
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
-            className="flex flex-col lg:flex-row justify-between items-end gap-8 mb-20"
-          >
-            <div className="max-w-2xl">
-              <h2 className="display text-4xl lg:text-5xl mb-6">Core Commodities</h2>
-              <p className="prose">
-                Sourced directly from certified farms across the globe, ensuring purity, nutritional value, and absolute traceability in every single shipment.
-              </p>
-            </div>
-            <Link href="/catalog">
-              <motion.button 
-                whileHover={{ x: 5 }}
-                className="btn btn-ghost hidden lg:flex"
+            <div className="lg:col-span-4 lg:sticky lg:top-32 z-10 max-w-sm">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={staggerContainer}
               >
-                View All Categories <ArrowRight className="ml-2 h-4 w-4" />
-              </motion.button>
-            </Link>
-          </motion.div>
-
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {CATEGORIES.map((cat, idx) => (
-              <motion.div key={cat.id} variants={fadeInUp}>
-                <Link href={`/catalog?category=${cat.id}`}>
-                  <motion.div 
-                    whileHover={{ y: -10 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="group block relative overflow-hidden rounded-2xl aspect-[4/5] card-elite p-0 border-0 cursor-pointer"
-                  >
-                    <div className="absolute inset-0">
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
-                        className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-90" />
-                    </div>
-                    <div className="absolute inset-0 flex flex-col justify-end p-8 transform transition-transform duration-500">
-                      <span className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-3 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">Explore Collection</span>
-                      <h3 className="text-3xl font-serif font-bold text-white mb-3 leading-tight">{cat.name}</h3>
-                      <p className="text-white/70 text-sm leading-relaxed">{cat.description}</p>
-                    </div>
-                  </motion.div>
-                </Link>
+                <motion.h2 variants={fadeInUp} className="text-4xl lg:text-5xl font-serif text-foreground mb-6 leading-tight">
+                  Core <br className="hidden lg:block"/>Commodities
+                </motion.h2>
+                <motion.p variants={fadeInUp} className="text-lg text-text-secondary leading-relaxed mb-8">
+                  Sourced directly from certified farms across the globe, ensuring absolute traceability in every single shipment.
+                </motion.p>
+                <motion.div variants={fadeInUp}>
+                  <Link href="/catalog">
+                    <button className="group flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-accent hover:text-accent-hover transition-colors">
+                      View Catalog
+                      <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </Link>
+                </motion.div>
               </motion.div>
-            ))}
-          </motion.div>
-          
-          <div className="mt-12 lg:hidden">
-            <Link href="/catalog">
-              <button className="btn btn-ghost w-full">
-                View All Categories <ArrowRight className="ml-2 h-4 w-4" />
-              </button>
-            </Link>
-          </div>
-        </div>
-      </section>
+            </div>
 
-      {/* Featured Products – Infinite Marquee */}
-      <section className="py-32 bg-background overflow-hidden">
-        {/* Inject keyframes once */}
-        <style>{`
-          @keyframes marquee-scroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .marquee-track {
-            display: flex;
-            width: max-content;
-            animation: marquee-scroll 40s linear infinite;
-            will-change: transform;
-          }
-          .marquee-track:hover {
-            animation-play-state: paused;
-          }
-        `}</style>
-
-        <div className="container">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
-            className="text-center max-w-3xl mx-auto mb-20"
-          >
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-accent mb-4 block">Premium Selection</span>
-            <h2 className="display text-4xl lg:text-5xl mb-6">Featured Exports</h2>
-            <p className="prose mx-auto">Browse our bestselling commodities with guaranteed quality and competitive CIF pricing.</p>
-          </motion.div>
-        </div>
-
-        {/* Full-bleed marquee – no container constraints */}
-        {loading ? (
-          <div className="flex gap-6 px-6 overflow-hidden">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div key={idx} className="skeleton h-[420px] w-72 shrink-0 rounded-2xl animate-pulse" />
-            ))}
-          </div>
-        ) : featuredProducts.length > 0 ? (
-          /* Outer mask – fade edges. dir="ltr" keeps flex order physical even in RTL page mode */
-          <div
-            dir="ltr"
-            className="relative w-full"
-            style={{
-              maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
-            }}
-          >
-            {/* Duplicate list so the loop is seamless */}
-            <div dir="ltr" className="marquee-track gap-6 px-6">
-              {[...featuredProducts, ...featuredProducts].map((product, idx) => (
-                <div
-                  key={`${product.id}-${idx}`}
-                  className="shrink-0"
-                  style={{ width: "clamp(160px, 44vw, 320px)" }}
+            <div className="lg:col-span-8 flex flex-col gap-8 lg:gap-12 w-full">
+              {CATEGORIES.map((cat, idx) => (
+                <motion.div 
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.8, delay: idx * 0.1, ease: [0.23, 1, 0.32, 1] }}
                 >
-                  <ProductCard product={product} />
-                </div>
+                  <Link href={`/catalog?category=${cat.id}`}>
+                    <motion.div 
+                      whileTap={{ scale: 0.98 }}
+                      className="group block relative w-full h-[50vh] lg:h-[60vh] bg-border overflow-hidden cursor-pointer"
+                    >
+                      <div className="absolute inset-0">
+                        <img
+                          src={cat.image}
+                          alt={cat.name}
+                          className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/40 transition-opacity duration-700 group-hover:bg-black/20" />
+                      </div>
+                      <div className="absolute inset-0 p-8 lg:p-12 flex flex-col justify-end">
+                        <h3 className="text-4xl lg:text-5xl font-serif text-white mb-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">{cat.name}</h3>
+                        <p className="text-white/80 max-w-md opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">{cat.description}</p>
+                      </div>
+                    </motion.div>
+                  </Link>
+                </motion.div>
               ))}
             </div>
           </div>
-        ) : (
-          <div className="container">
-            <div className="py-20 text-center border border-border rounded-2xl bg-secondary/50">
-              <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">No products available at the moment.</p>
-            </div>
-          </div>
-        )}
-
-        <div className="container mt-16 text-center">
-          <Link href="/catalog">
-            <motion.button whileHover={{ y: -2 }} className="btn btn-ghost">
-              View Full Catalog <ArrowRight className="ml-2 h-4 w-4" />
-            </motion.button>
-          </Link>
         </div>
       </section>
 
-      {/* Value Proposition */}
-      <section className="py-32 bg-foreground text-background overflow-hidden">
-        <div className="container">
+      {/* 3. MARQUEE - Brutalist */}
+      <section className="py-12 lg:py-32 bg-foreground text-background overflow-hidden flex flex-col justify-center">
+        <style>{`
+          @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+          }
+          .animate-scroll {
+            display: flex;
+            white-space: nowrap;
+            animation: scroll-left 40s linear infinite;
+            will-change: transform;
+          }
+        `}</style>
+        
+        {/* Massive Text Marquee */}
+        <div className="w-full overflow-hidden flex mb-16 lg:mb-24 opacity-90">
+          <div className="animate-scroll">
+            <span className="text-[10vw] font-serif font-bold uppercase leading-none tracking-tight text-background shrink-0 pr-8">
+              PREMIUM EXPORTS • CERTIFIED QUALITY • DIRECT SOURCING • GLOBAL REACH •
+            </span>
+          </div>
+          <div className="animate-scroll" aria-hidden="true">
+            <span className="text-[10vw] font-serif font-bold uppercase leading-none tracking-tight text-background shrink-0 pr-8">
+              PREMIUM EXPORTS • CERTIFIED QUALITY • DIRECT SOURCING • GLOBAL REACH •
+            </span>
+          </div>
+          <div className="animate-scroll" aria-hidden="true">
+            <span className="text-[10vw] font-serif font-bold uppercase leading-none tracking-tight text-background shrink-0 pr-8">
+              PREMIUM EXPORTS • CERTIFIED QUALITY • DIRECT SOURCING • GLOBAL REACH •
+            </span>
+          </div>
+        </div>
+
+        {/* Product Slider (Edge to Edge) */}
+        <div className="w-full">
+          {loading ? (
+            <div className="flex gap-6 px-6 overflow-hidden">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="skeleton h-[420px] w-72 shrink-0 animate-pulse bg-white/10" />
+              ))}
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div dir="ltr" className="relative w-full" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)" }}>
+              <div dir="ltr" className="animate-scroll gap-6 px-6 hover:[animation-play-state:paused]">
+                {[...featuredProducts, ...featuredProducts].map((product, idx) => (
+                  <div key={`${product.id}-${idx}`} className="shrink-0" style={{ width: "clamp(260px, 25vw, 360px)" }}>
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      {/* 3.5 STORYTELLING - Scroll Reveal */}
+      <StorySection />
+
+      {/* 4. VALUE PROP - Minimalist Index */}
+      <section className="py-16 lg:py-32 bg-background border-t border-border">
+        <div className="container px-4 lg:px-8 max-w-5xl mx-auto">
           <motion.div 
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={fadeInUp}
-            className="text-center max-w-3xl mx-auto mb-20"
+            className="mb-20"
           >
-            <h2 className="display text-4xl lg:text-5xl mb-6 text-background">Why Choose KINSA</h2>
-            <p className="text-background/70 text-lg leading-relaxed mx-auto">We deliver excellence through uncompromising quality, radical transparency, and enduring partnerships.</p>
+            <h2 className="text-4xl lg:text-6xl font-serif text-foreground mb-6">Uncompromising <br className="hidden md:block"/>Standards.</h2>
           </motion.div>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
+          <div className="flex flex-col border-t border-border">
             {[
               {
-                icon: ShieldCheck,
+                id: "01",
                 title: "Certified Quality",
-                desc: "ISO 22000 certified, lab-tested every batch with complete traceability from origin."
+                desc: "ISO 22000 certified, lab-tested every batch with complete traceability from origin. We never compromise on purity."
               },
               {
-                icon: Globe2,
+                id: "02",
                 title: "Global Logistics",
-                desc: "Flexible Incoterms (FOB, CIF, EXW) coordinated by our dedicated freight forwarding experts."
+                desc: "Flexible Incoterms (FOB, CIF, EXW) coordinated by our dedicated freight forwarding experts for seamless delivery."
               },
               {
-                icon: Leaf,
+                id: "03",
                 title: "Farm Direct",
-                desc: "Direct sourcing from over 500 certified farmers ensuring fair trade and peak freshness."
+                desc: "Direct sourcing from over 500 certified farmers ensuring fair trade, peak freshness, and stable supply chains."
               }
-            ].map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <motion.div 
-                  key={idx} 
-                  variants={fadeInUp}
-                  whileHover={{ y: -4 }}
-                  className="p-10 border border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 transition-colors duration-500 cursor-default"
-                >
-                  <motion.div 
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    variants={popIn}
-                    className="h-16 w-16 rounded-2xl bg-accent/20 flex items-center justify-center mb-8"
-                  >
-                    <Icon className="h-8 w-8 text-accent" />
-                  </motion.div>
-                  <h3 className="text-2xl font-serif font-bold text-background mb-4">{item.title}</h3>
-                  <p className="text-background/60 leading-relaxed">{item.desc}</p>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+            ].map((item, idx) => (
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.8, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
+                className="group flex flex-col md:flex-row md:items-baseline gap-4 md:gap-12 py-10 border-b border-border hover:bg-bg-subtle transition-colors duration-300 px-4 -mx-4"
+              >
+                <span className="text-sm font-mono text-text-muted w-8 shrink-0">{item.id}</span>
+                <h3 className="text-2xl lg:text-3xl font-serif text-foreground w-full md:w-1/3 shrink-0">{item.title}</h3>
+                <p className="text-text-secondary text-lg leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-32 bg-background relative overflow-hidden">
-        <div className="absolute inset-0 border-y border-border" />
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-secondary/30 -z-10" />
-        
-        <div className="container relative z-10 text-center max-w-4xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
+      {/* 5. CTA SECTION - Clean Block */}
+      <section className="py-16 lg:py-32 bg-bg-subtle border-t border-border text-center">
+        <div className="container max-w-3xl">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl lg:text-5xl font-serif mb-8 text-foreground"
           >
-            <motion.span 
-              variants={popIn}
-              className="h-16 w-16 mx-auto bg-primary text-primary-foreground rounded-full flex items-center justify-center mb-8 shadow-xl"
-            >
-              <ArrowRight className="h-6 w-6 -rotate-45" />
-            </motion.span>
-            <motion.h2 variants={fadeInUp} className="display text-4xl lg:text-6xl mb-8">Ready to Source Premium Commodities?</motion.h2>
-            <motion.p variants={fadeInUp} className="prose mx-auto text-xl mb-12">
-              Join hundreds of wholesale buyers who trust KINSA Global for consistent quality and seamless delivery.
-            </motion.p>
-            
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href="/auth">
-                <motion.button 
-                  whileHover={{ y: -2 }}
-                  className="btn btn-primary h-16 px-12 text-sm tracking-widest uppercase shadow-2xl"
-                >
-                  Create Partner Account
-                </motion.button>
-              </Link>
-              <Link href="/contact">
-                <motion.button 
-                  whileHover={{ y: -2 }}
-                  className="btn btn-ghost h-16 px-12 text-sm tracking-widest uppercase"
-                >
-                  Contact Sales
-                </motion.button>
-              </Link>
-            </motion.div>
+            Ready to source premium commodities?
+          </motion.h2>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Link href="/auth">
+              <motion.button 
+                whileTap={{ scale: 0.97 }}
+                className="h-14 px-10 bg-accent text-white font-sans font-semibold text-sm tracking-widest uppercase hover:bg-accent-hover transition-colors"
+              >
+                Create Account
+              </motion.button>
+            </Link>
+            <Link href="/contact">
+              <motion.button 
+                whileTap={{ scale: 0.97 }}
+                className="h-14 px-10 border border-border-strong text-foreground font-sans font-semibold text-sm tracking-widest uppercase hover:bg-border transition-colors"
+              >
+                Contact Sales
+              </motion.button>
+            </Link>
           </motion.div>
         </div>
       </section>

@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { duration: 0.7, ease: "easeOut" } 
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: "easeOut" }
   }
 };
 
@@ -27,9 +27,9 @@ export default function Contact() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16 overflow-hidden">
-        
+
         {/* Header Block */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -42,42 +42,42 @@ export default function Contact() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-          
+
           {/* Contact Info */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, type: "spring", stiffness: 60 }}
             className="lg:col-span-1"
           >
-            <Card className="border-none shadow-xl bg-primary text-primary-foreground rounded-3xl overflow-hidden">
+            <Card className="border-none shadow-xl bg-primary text-primary-foreground rounded-3xl overflow-hidden ">
               <CardContent className="p-10 space-y-8">
                 {[
-                  { 
-                    icon: MapPin, 
-                    title: "Headquarters", 
-                    content: "123 Trade Harbor Blvd,\nMumbai, Maharashtra 400001\nIndia" 
+                  {
+                    icon: MapPin,
+                    title: "Headquarters",
+                    content: "123 Trade Harbor Blvd,\nMumbai, Maharashtra 400001\nIndia"
                   },
-                  { 
-                    icon: Phone, 
-                    title: "Phone", 
-                    content: "+91 22 1234 5678\n+91 98765 43210" 
+                  {
+                    icon: Phone,
+                    title: "Phone",
+                    content: "+91 22 1234 5678\n+91 98765 43210"
                   },
-                  { 
-                    icon: Mail, 
-                    title: "Email", 
-                    content: "sales@kinsa.com\ninfo@kinsa.com" 
+                  {
+                    icon: Mail,
+                    title: "Email",
+                    content: "sales@kinsa.com\ninfo@kinsa.com"
                   },
-                  { 
-                    icon: Clock, 
-                    title: "Office Hours", 
-                    content: "Mon - Sat: 9:00 AM - 7:00 PM IST" 
+                  {
+                    icon: Clock,
+                    title: "Office Hours",
+                    content: "Mon - Sat: 9:00 AM - 7:00 PM IST"
                   }
                 ].map((item, idx) => {
                   const Icon = item.icon;
                   return (
-                    <motion.div 
+                    <motion.div
                       key={idx}
                       initial={{ opacity: 0, y: 15 }}
                       whileInView={{ opacity: 1, y: 0 }}
@@ -102,7 +102,7 @@ export default function Contact() {
           </motion.div>
 
           {/* Contact Form */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -113,20 +113,6 @@ export default function Contact() {
           </motion.div>
         </div>
 
-        {/* Map Block */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="mt-20 h-96 bg-secondary/50 rounded-3xl flex items-center justify-center border border-border/80 shadow-inner overflow-hidden"
-        >
-          <div className="text-center space-y-2 text-muted-foreground p-6">
-            <MapPin className="h-8 w-8 mx-auto text-accent animate-bounce" />
-            <p className="font-semibold uppercase tracking-widest text-xs">Google Maps Embed Placeholder</p>
-            <p className="text-xs max-w-sm mx-auto">Interactive logistics map showcasing key Indian port shipping routes to partner countries.</p>
-          </div>
-        </motion.div>
       </div>
     </Layout>
   );

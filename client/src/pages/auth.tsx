@@ -20,6 +20,7 @@ export default function Auth() {
   const { signInWithGoogle, isLoggedIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  const [authComplete, setAuthComplete] = useState(false);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -34,7 +35,8 @@ export default function Auth() {
     
     try {
       await signInWithGoogle();
-      // The redirect will happen via the useEffect above when isLoggedIn changes
+      // Signal that auth is done — LoadingScreen will dismiss once video ends
+      setAuthComplete(true);
     } catch (error: any) {
       toast({
         title: "Google Sign In Failed",
@@ -43,11 +45,20 @@ export default function Auth() {
       });
       setLoading(false);
       setShowLoadingScreen(false);
+      setAuthComplete(false);
     }
   };
 
   if (showLoadingScreen) {
-    return <LoadingScreen />;
+    return (
+      <LoadingScreen
+        appReady={authComplete}
+        onReady={() => {
+          setShowLoadingScreen(false);
+          setLocation("/dashboard");
+        }}
+      />
+    );
   }
 
   return (

@@ -75,14 +75,75 @@ serve(async (req: Request) => {
     }
 
     // ✅ Parse request body
-    const { amount, currency = "INR", receipt, notes } = await req.json();
+    const { currency = "INR", receipt, notes } = await req.json();
 
-    if (!amount || amount <= 0) {
+    if (!notes || !notes.items || !Array.isArray(notes.items) || notes.items.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Valid amount is required" }),
+        JSON.stringify({ error: "Order items are required in notes" }),
         { status: 400, headers: corsHeaders }
       );
     }
+
+    // ✅ Securely calculate the true amount
+    let trueTotalRupees = 0;
+    
+    // Extract unique product IDs from the order
+    const productIds = notes.items.map((item: any) => item.product.id);
+    
+    // Fetch actual prices from the database
+    const { data: dbProducts, error: productsError } = await supabase
+      .from("Products")
+      .select("id, price")
+      .in("id", productIds);
+
+    if (productsError) {
+      console.error("Failed to fetch products:", productsError);
+      return new Response(JSON.stringify({ error: "Failed to verify product prices" }), {
+        status: 500, headers: corsHeaders
+      });
+    }
+
+    // Map DB prices for quick lookup
+    const priceMap = new Map();
+    dbProducts?.forEach(p => {
+      priceMap.set(p.id.toString(), Number(p.price));
+    });
+
+    // Calculate total from DB prices
+    for (const item of notes.items) {
+      const productId = item.product.id.toString();
+      const dbPrice = priceMap.get(productId);
+      
+      if (dbPrice === undefined) {
+        return new Response(JSON.stringify({ error: `Product ID ${productId} not found in database.` }), {
+          status: 400, headers: corsHeaders
+        });
+      }
+      
+      // Update the notes item with the true DB price to ensure accuracy downstream
+      item.product.price = dbPrice;
+      
+      const quantity = Number(item.quantity) || 0;
+      trueTotalRupees += (dbPrice * quantity);
+    }
+
+    // Add shipping cost (Assuming a fixed shipping cost or standard rate provided securely)
+    // Here we trust the shipping cost from the notes for simplicity, but ideally, 
+    // it should be calculated dynamically based on location in a real production app.
+    const shippingCost = Number(notes.shippingCost) || 0;
+    trueTotalRupees += shippingCost;
+    
+    // We update the notes total_amount to reflect the secure calculation
+    notes.total_amount = trueTotalRupees;
+    notes.securely_calculated = true;
+
+    if (trueTotalRupees <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Calculated order amount must be greater than zero" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
 
     // ✅ Razorpay credentials
     const razorpayKeyId = Deno.env.get("RAZORPAY_KEY_ID");
@@ -102,7 +163,7 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: Math.round(amount * 100), // paise
+        amount: Math.round(trueTotalRupees * 100), // paise
         currency,
         receipt: receipt || `receipt_${Date.now()}`,
         notes: notes || {},
@@ -123,7 +184,7 @@ serve(async (req: Request) => {
     const { error: dbError } = await supabase.from("payments").insert({
       user_email: user.email,
       razorpay_order_id: razorpayOrder.id,
-      amount: amount, // rupees
+      amount: trueTotalRupees, // rupees
       currency,
       status: "created",
       notes: razorpayOrder.notes,

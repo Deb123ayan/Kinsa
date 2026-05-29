@@ -33,9 +33,57 @@ const AdminManagement = lazy(() => import("@/pages/admin/admins"));
 
 const ProtectedDashboard = withProtectedRoute(Dashboard);
 
+import { motion } from "framer-motion";
+
 const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  <div className="min-h-[100svh] w-full flex flex-col items-center justify-center bg-background gap-8 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col items-center"
+    >
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 mb-8">
+        {/* Outer slow ring */}
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+          className="absolute inset-0 rounded-full border-t-2 border-r-2 border-accent/20"
+        />
+        {/* Inner fast ring */}
+        <motion.div 
+          animate={{ rotate: -360 }}
+          transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+          className="absolute inset-2 rounded-full border-b-2 border-l-2 border-accent"
+        />
+        {/* Logo */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.img 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 1 }}
+            src="/logo_favicon.jpeg" 
+            alt="KINSA Logo" 
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-xl" 
+          />
+        </div>
+      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        className="flex flex-col items-center gap-1"
+      >
+        <span className="font-serif text-2xl font-bold tracking-widest text-foreground">KINSA</span>
+        <motion.span 
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-semibold"
+        >
+          Loading
+        </motion.span>
+      </motion.div>
+    </motion.div>
   </div>
 );
 

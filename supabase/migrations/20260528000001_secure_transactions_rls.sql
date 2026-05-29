@@ -1,0 +1,2 @@
+-- Reverted by user request for testing with Razorpay test keys.
+-- The restrictive policies have been removed so the frontend can create orders locally.

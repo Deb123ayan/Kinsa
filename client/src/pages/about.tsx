@@ -2,14 +2,15 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, History, TrendingUp, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { ParallaxGallery } from "@/components/ui/parallax-gallery";
 
 // High-end animation presets
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { duration: 0.8, ease: "easeOut" } 
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: "easeOut" }
   }
 };
 
@@ -24,9 +25,9 @@ const staggerContainer = {
 };
 
 const cardHover = {
-  hover: { 
-    y: -6, 
-    transition: { type: "spring", stiffness: 300, damping: 15 } 
+  hover: {
+    y: -6,
+    transition: { type: "spring", stiffness: 300, damping: 15 }
   }
 };
 
@@ -36,10 +37,10 @@ export default function About() {
       <div className="relative bg-primary py-24 text-primary-foreground text-center overflow-hidden">
         {/* Background Video */}
         <div className="absolute inset-0">
-          <video 
-            autoPlay 
-            muted 
-            loop 
+          <video
+            autoPlay
+            muted
+            loop
             playsInline
             className="h-full w-full object-cover opacity-75 brightness-110 contrast-105 saturate-90 scale-105"
             onError={(e) => {
@@ -51,14 +52,14 @@ export default function About() {
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/50 to-primary/80" />
         </div>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="container mx-auto px-4 relative z-10"
         >
-          <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6 text-white">
             Our Legacy of Trust
           </h1>
           <p className="text-xl max-w-2xl mx-auto opacity-90 leading-relaxed font-sans">
@@ -68,11 +69,13 @@ export default function About() {
         </motion.div>
       </div>
 
+      <ParallaxGallery />
+
       <div className="container mx-auto px-4 py-28 overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
-          
+
           {/* Narrative Content */}
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -102,7 +105,7 @@ export default function About() {
               ].map((m, index) => {
                 const Icon = m.icon;
                 return (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     variants={fadeInUp}
                     whileHover={{ y: -4 }}
@@ -126,7 +129,7 @@ export default function About() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, type: "spring", stiffness: 60 }}
           >
-            <motion.div 
+            <motion.div
               variants={cardHover}
               whileHover="hover"
               className="bg-card-elevated rounded-3xl p-10 border border-border/60 shadow-lg space-y-8 cursor-default"
@@ -142,7 +145,7 @@ export default function About() {
                   "Organic Certified (NPOP/NOP)",
                   "Halal & Kosher Available"
                 ].map((cert, index) => (
-                  <motion.li 
+                  <motion.li
                     key={index}
                     initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -155,7 +158,7 @@ export default function About() {
                   </motion.li>
                 ))}
               </ul>
-              
+
               <Button className="w-full mt-4 h-12 bg-accent hover:bg-accent/90 text-white rounded-xl shadow-md uppercase tracking-wider text-xs font-bold transition-transform hover:-translate-y-0.5" variant="default">
                 Request Copies of Certificates
               </Button>

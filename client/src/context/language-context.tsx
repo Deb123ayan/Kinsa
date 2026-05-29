@@ -14,14 +14,22 @@ const LanguageContext = React.createContext<LanguageContextType | undefined>(und
 // ── Reliably apply a language to the Google Translate combo ──────────────────
 // Retries every 200 ms for up to 5 s in case the widget hasn't loaded yet.
 function triggerGoogleTranslate(lang: Language) {
-  const googleLang = lang === 'zh' ? 'zh-CN' : lang;
-
   const tryApply = () => {
     const sel = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
     if (sel) {
-      if (sel.value !== googleLang) {
-        sel.value = googleLang;
-        sel.dispatchEvent(new Event('change'));
+      if (lang === 'en') {
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${window.location.hostname}; path=/;`;
+        if (sel.value !== '') {
+          sel.value = '';
+          sel.dispatchEvent(new Event('change'));
+        }
+      } else {
+        const googleLang = lang === 'zh' ? 'zh-CN' : lang;
+        if (sel.value !== googleLang) {
+          sel.value = googleLang;
+          sel.dispatchEvent(new Event('change'));
+        }
       }
       return true; // success
     }
@@ -57,6 +65,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (savedLanguage && translations[savedLanguage]) {
       setLanguageState(savedLanguage);
       triggerGoogleTranslate(savedLanguage);
+    } else {
+      triggerGoogleTranslate('en');
     }
   }, []);
 

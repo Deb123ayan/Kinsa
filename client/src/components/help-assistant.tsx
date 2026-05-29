@@ -29,7 +29,12 @@ import { ChatbotService, ChatMessage, ChatContext } from "@/services/chatbot";
 
 type ViewType = "greeting" | "account" | "cart" | "orders" | "chat";
 
-export function HelpAssistant() {
+interface HelpAssistantProps {
+  externalOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function HelpAssistant({ externalOpen, onClose }: HelpAssistantProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>("greeting");
   const [showNotification, setShowNotification] = useState(true);
@@ -43,6 +48,14 @@ export function HelpAssistant() {
 
   const { user, getUserDisplayName } = useAuth();
   const { cart, cartTotal, cartCount } = useCart();
+
+  // Sync isOpen with externalOpen prop
+  React.useEffect(() => {
+    if (externalOpen !== undefined) {
+      setIsOpen(externalOpen);
+      if (externalOpen) setCurrentView("greeting");
+    }
+  }, [externalOpen]);
 
   // Hide notification after 5 seconds
   useEffect(() => {
@@ -808,9 +821,10 @@ export function HelpAssistant() {
 
   return (
     <>
-      {/* Floating Help Button */}
+      {/* Floating Help Button — only shown when not controlled via bubble menu */}
+      {onClose === undefined && (
       <motion.div
-        className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50"
+        className="fixed bottom-24 right-6 sm:bottom-24 sm:right-8 z-[90]"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 1, type: "spring", stiffness: 260, damping: 20 }}
@@ -847,6 +861,7 @@ export function HelpAssistant() {
           </Button>
         </div>
       </motion.div>
+      )}
 
       {/* Help Modal */}
       <AnimatePresence>
@@ -880,7 +895,7 @@ export function HelpAssistant() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => { setIsOpen(false); if (onClose) onClose(); }}
                         className="h-8 w-8"
                       >
                         <X className="h-4 w-4" />

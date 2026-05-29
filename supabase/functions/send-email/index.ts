@@ -53,7 +53,8 @@ serve(async (req: Request) => {
 
   try {
     // 1. Rate Limiting Check
-    const clientIp = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for") || "unknown";
+    // Use Cloudflare's cf-connecting-ip which cannot be spoofed by the client in this environment
+    const clientIp = req.headers.get("cf-connecting-ip") || "unknown";
     const now = Date.now();
     
     if (clientIp !== "unknown") {
